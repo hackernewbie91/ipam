@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+    <a href="{{ url_for('subnets.list_subnets') }}" class="btn btn-outline-primary">
+        <i class="bi bi-diagram-2"></i> View Subnets
+    </a>
+</div>
+
+<!-- Statistik Card -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-white-50 mb-1">Total Subnets</p>
+                        <h5 class="mb-0">{{ stats.total_subnets }}</h5>
+                    </div>
+                    <i class="bi bi-diagram-2 fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-white-50 mb-1">Available IPs</p>
+                        <h5 class="mb-0">{{ stats.total_available }}</h5>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 text-white-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-dark-50 mb-1">Allocated / Reserved</p>
+                        <h5 class="mb-0 text-dark">{{ stats.total_allocated }}</h5>
+                    </div>
+                    <i class="bi bi-hdd-stack fs-1 text-dark-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Subnets Over Threshold -->
+{% if alert_subnets %}
+<div class="card shadow-sm mb-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <i class="bi bi-exclamation-triangle-fill"></i> Subnets Over Threshold
+    </div>
+    <div class="card-body">
+        <div class="list-group">
+        {% for subnet in alert_subnets %}
+            <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" 
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                {{ subnet.name }}
+                <span>
+                    <span class="badge bg-danger rounded-pill me-2">{{ subnet.usage }}% used</span>
+                    <span class="text-muted">(threshold {{ subnet.threshold }}%)</span>
+                    <span class="badge bg-secondary ms-2">Available: {{ subnet.available }}</span>
+                </span>
+            </a>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Grafik -->
+<div class="row g-4 mb-4">
+    <!-- Pie Chart: Utilisasi Subnet -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart-fill me-2"></i>Subnet Utilization (%)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="utilizationPieChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Bar Chart: IP Allocated vs Available -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-fill me-2"></i>IPs per Subnet</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="ipBarChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donut Chart: Distribusi Global -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-4 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-circle-fill me-2"></i>Global IP Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="globalDonutChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Search -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form class="row g-2" method="GET" action="{{ url_for('main.dashboard') }}">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input class="form-control" name="search" placeholder="Search IP address, hostname, or subnet...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1"></i> Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hasil Pencarian -->
+{% if search_query %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-search me-2"></i>Search Results for "{{ search_query }}"</h5>
+        <span class="badge bg-primary">{{ search_results|length }} found</span>
+    </div>
+    <div class="card-body p-0">
+        {% if search_results %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Subnet</th>
+                        <th>Status</th>
+                        <th>Hostname</th>
+                        <th>MAC</th>
+                        <th>Device</th>
+                        <th>Assigned To</th>
+                        <th>Online</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip in search_results %}
+                    <tr>
+                        <td><span class="fw-mono">{{ ip.ip_address }}</span></td>
+                        <td><a href="{{ url_for('subnets.subnet_detail', subnet_id=ip.subnet_id) }}">{{ ip.subnet.name }}</a></td>
+                        <td><span class="badge bg-{{ 'success' if ip.status=='allocated' else 'secondary' }}">{{ ip.status }}</span></td>
+                        <td>{{ ip.hostname or '-' }}</td>
+                        <td><small>{{ ip.mac_address or '-' }}</small></td>
+                        <td>{{ ip.device_type or '-' }}</td>
+                        <td>{{ ip.assigned_to or '-' }}</td>
+                        <td>
+                            {% if ip.is_online %}
+                            <span class="badge bg-success">Online</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Offline</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('subnets.subnet_detail', subnet_id=ip.subnet_id) }}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-search fs-1"></i>
+            <p class="mt-2">No results found for "{{ search_query }}".</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-activity me-2"></i>Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                {% if current_user.role in ['admin', 'manager'] %}
+                <a href="{{ url_for('subnets.create_subnet') }}" class="btn btn-outline-success w-100 mb-2">
+                    <i class="bi bi-plus-circle"></i> Add Subnet
+                </a>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('subnets.list_subnets') }}" class="btn btn-outline-info w-100 mb-2">
+                    <i class="bi bi-list-ul"></i> Manage IPs
+                </a>
+            </div>
+            {% if current_user.is_admin %}
+            <div class="col-md-4">
+                <a href="/admin" class="btn btn-outline-warning w-100 mb-2">
+                    <i class="bi bi-shield-lock"></i> Admin Panel
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Auto Scan Control (Admin Only) -->
+{% if current_user.is_admin %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-arrow-repeat me-2"></i>Auto Scan Control</h5>
+    </div>
+    <div class="card-body">
+        {% set auto_scan_enabled = get_setting('auto_scan_enabled', 'false') == 'true' %}
+        {% set auto_scan_interval = get_setting('auto_scan_interval', config.AUTO_SCAN_INTERVAL) %}
+        
+        <form method="POST" action="{{ url_for('main.toggle_auto_scan_web') }}" class="row g-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="enabled" class="form-select">
+                    <option value="true" {% if auto_scan_enabled %}selected{% endif %}>ON</option>
+                    <option value="false" {% if not auto_scan_enabled %}selected{% endif %}>OFF</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Interval (menit)</label>
+                <input type="number" name="interval" class="form-control" value="{{ auto_scan_interval }}" min="5">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+        <div class="mt-3">
+            {% if auto_scan_enabled %}
+            <span class="badge bg-success">Auto Scan is ON</span>
+            <small class="text-muted ms-2">Runs every {{ auto_scan_interval }} minutes</small>
+            {% else %}
+            <span class="badge bg-secondary">Auto Scan is OFF</span>
+            <small class="text-muted ms-2">Manual scan only</small>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch data dari API
+    fetch("{{ url_for('main.api_dashboard_stats') }}")
+        .then(response => response.json())
+        .then(data => {
+            drawPieChart(data.pie);
+            drawBarChart(data.bar);
+            drawDonutChart(data.donut);
+        })
+        .catch(error => console.error('Error loading chart data:', error));
+});
+
+function drawPieChart(pieData) {
+    const ctx = document.getElementById('utilizationPieChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: pieData.labels,
+            datasets: [{
+                data: pieData.data,
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                    '#6f42c1', '#fd7e14', '#20c9a6', '#858796', '#5a5c69'
+                ],
+                hoverBackgroundColor: [
+                    '#2e59d9', '#17a673', '#2c9faf', '#dda20a', '#be2617',
+                    '#5a2d8c', '#c65f0a', '#1aa18a', '#6b6e7d', '#41434b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.label + ': ' + ctx.raw + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function drawBarChart(barData) {
+    const ctx = document.getElementById('ipBarChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: barData.labels,
+            datasets: [
+                {
+                    label: 'Allocated',
+                    data: barData.allocated,
+                    backgroundColor: '#4e73df',
+                    borderRadius: 4,
+                },
+                {
+                    label: 'Available',
+                    data: barData.available,
+                    backgroundColor: '#1cc88a',
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+}
+
+function drawDonutChart(donutData) {
+    const ctx = document.getElementById('globalDonutChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: donutData.labels,
+            datasets: [{
+                data: donutData.data,
+                backgroundColor: ['#4e73df', '#f6c23e', '#1cc88a'],
+                hoverBackgroundColor: ['#2e59d9', '#dda20a', '#17a673']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

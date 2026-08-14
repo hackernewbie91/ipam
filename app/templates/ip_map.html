@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('subnets.list_subnets') }}">Subnets</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}">{{ subnet.name }}</a></li>
+    <li class="breadcrumb-item active">IP Map</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-grid-3x3-gap-fill me-2"></i>IP Map: {{ subnet.name }}</h2>
+    <div>
+        <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-list-ul"></i> Table View
+        </a>
+        <button id="refreshMap" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> IP Grid</h5>
+                <div>
+                    <small class="text-muted">Network: {{ subnet.network_address }}</small>
+                </div>
+            </div>
+            <div class="card-body" id="ipGridContainer">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading IP map...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-palette"></i> Legend</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-success me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span>Free / Available</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-primary me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span>Allocated</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-secondary me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span>Reserved</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-danger me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span>Gateway</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-info me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span>Online (dot in corner)</span>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Network Info</h6>
+            </div>
+            <div class="card-body" id="networkInfo">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadIPMap();
+    
+    document.getElementById('refreshMap').addEventListener('click', loadIPMap);
+});
+
+function loadIPMap() {
+    const container = document.getElementById('ipGridContainer');
+    const networkInfo = document.getElementById('networkInfo');
+    const subnetId = {{ subnet.id }};
+    
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading IP map...</p>
+        </div>
+    `;
+    
+    fetch(`/subnets/${subnetId}/ipmap/data`)
+        .then(response => response.json())
+        .then(data => {
+            renderIPGrid(data, container, networkInfo);
+        })
+        .catch(error => {
+            console.error('Error loading IP map:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    Failed to load IP map. Please try again.
+                </div>
+            `;
+        });
+}
+
+function renderIPGrid(data, container, networkInfo) {
+    const ips = data.ips;
+    const info = data.network_info;
+    
+    // Tentukan ukuran grid (kolom per baris)
+    // Untuk subnet besar, gunakan 16 kolom; subnet kecil gunakan 8
+    let cols = 16;
+    if (ips.length <= 32) cols = 8;
+    if (ips.length <= 64) cols = 16;
+    else if (ips.length <= 128) cols = 16;
+    else if (ips.length <= 256) cols = 16;
+    else cols = 32;
+    
+    // Update network info
+    networkInfo.innerHTML = `
+        <div class="mb-2">
+            <small class="text-muted">Network</small><br>
+            <strong>${info.network}/${data.ips.length > 0 ? (32 - Math.log2(info.total_ips + 2)) : ''}</strong>
+        </div>
+        <div class="mb-2">
+            <small class="text-muted">Netmask</small><br>
+            <strong>${info.netmask}</strong>
+        </div>
+        <div class="mb-2">
+            <small class="text-muted">Gateway</small><br>
+            <strong>${info.gateway || 'Not set'}</strong>
+        </div>
+        <div class="mb-2">
+            <small class="text-muted">Total Usable IPs</small><br>
+            <strong>${info.total_ips}</strong>
+        </div>
+        <div class="mb-2">
+            <small class="text-muted">Subnet Name</small><br>
+            <strong>${data.subnet_name}</strong>
+        </div>
+    `;
+    
+    // Buat grid
+    let html = '<div style="display: grid; grid-template-columns: repeat(' + cols + ', 1fr); gap: 4px;">';
+    
+    ips.forEach((ip, index) => {
+        let bgClass = 'bg-success'; // free
+        let title = `IP: ${ip.ip}\nStatus: Free`;
+        let dotHtml = '';
+        
+        if (ip.status === 'allocated') {
+            bgClass = 'bg-primary';
+            title = `IP: ${ip.ip}\nStatus: Allocated`;
+            if (ip.hostname) title += `\nHostname: ${ip.hostname}`;
+        } else if (ip.status === 'reserved') {
+            bgClass = 'bg-secondary';
+            title = `IP: ${ip.ip}\nStatus: Reserved`;
+            if (ip.hostname) title += `\nHostname: ${ip.hostname}`;
+        }
+        
+        // Tandai gateway
+        if (ip.ip === info.gateway) {
+            bgClass = 'bg-danger';
+            title += '\n[GATEWAY]';
+        }
+        
+        // Tandai online
+        if (ip.online) {
+            dotHtml = '<span style="position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; background: #0dcaf0; border-radius: 50%;"></span>';
+        }
+        
+        // Tandai network dan broadcast
+        if (ip.ip === info.network) {
+            bgClass = 'bg-dark';
+            title = `Network Address: ${ip.ip}`;
+        }
+        if (ip.ip === info.broadcast) {
+            bgClass = 'bg-dark';
+            title = `Broadcast Address: ${ip.ip}`;
+        }
+        
+        html += `
+            <div class="badge ${bgClass} d-flex align-items-center justify-content-center position-relative"
+                 style="height: 40px; cursor: pointer; font-size: 10px;"
+                 title="${title}"
+                 onclick="showIPDetail('${ip.ip}', '${ip.status}', '${ip.hostname}', ${ip.online})"
+                 data-bs-toggle="tooltip" data-bs-placement="top">
+                ${ip.ip.split('.').pop()}
+                ${dotHtml}
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    container.innerHTML = html;
+    
+    // Aktifkan tooltip
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+}
+
+function showIPDetail(ip, status, hostname, online) {
+    let message = `IP Address: ${ip}\nStatus: ${status}`;
+    if (hostname) message += `\nHostname: ${hostname}`;
+    if (online) message += `\nStatus: Online`;
+    else message += `\nStatus: Offline`;
+    
+    // Jika IP allocated/reserved, tawarkan untuk edit
+    if (status === 'allocated' || status === 'reserved') {
+        message += `\n\nClick OK to view/edit this IP.`;
+        if (confirm(message)) {
+            // Redirect ke halaman edit IP jika memungkinkan
+            // Catatan: kita perlu mencari ID IP dari IP address
+            // Untuk sementara, kita arahkan ke halaman detail subnet
+            window.location.href = "{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}";
+        }
+    } else {
+        alert(message);
+    }
+}
+</script>
+{% endblock %}

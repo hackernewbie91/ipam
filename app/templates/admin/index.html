@@ -1,0 +1,40 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<div class="container-fluid mt-4">
+    <h3>Administration Panel</h3>
+    <p>Welcome to the IPAM administration area. Manage users and view activity logs.</p>
+
+    <div class="row mt-4">
+        {% for item in admin_view.admin.menu() %}
+            {% if item.is_accessible() and item.name != 'Home' %}
+            <div class="col-md-4 mb-3">
+                <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                        <i class="bi bi-{% if item.name == 'User' %}people{% else %}list-check{% endif %} fs-1 text-primary mb-3"></i>
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <p class="card-text text-muted small">
+                            {% if item.name == 'User' %}
+                                Manage system users and their permissions.
+                            {% elif item.name == 'Activity Log' %}
+                                View all recorded activity logs.
+                            {% else %}
+                                Click to manage this section.
+                            {% endif %}
+                        </p>
+                        <a href="{{ item.get_url() }}" class="btn btn-primary btn-sm mt-2">
+                            Go to {{ item.name }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

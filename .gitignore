@@ -1,0 +1,42 @@
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+flask_session/
+
+# Migrations (jika ingin di-commit, hapus baris ini)
+migrations/versions/*.pyc
