@@ -185,7 +185,10 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('subnets.subnet_detail', subnet_id=ip.subnet_id) }}" class="btn btn-sm btn-info"><i class="ti ti-eye"></i></a>
+                        <a href="{{ url_for('subnets.subnet_detail', subnet_id=ip.subnet_id) }}" 
+                        style="min-width: 70px; height: 32px; display: inline-flex; align-items: center; justify-content: center; background-color: #4299e1; color: #fff; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            <i class="ti ti-eye" style="margin-right: 4px;"></i> View
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
