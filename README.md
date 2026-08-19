@@ -168,6 +168,7 @@ sudo chown -R ubuntu:ubuntu /opt/ipam/logs
 sudo nano /etc/systemd/system/ipam.service
 Isi:
 
+```ini
 [Unit]
 Description=IPAM - IP Address Management System
 After=network.target postgresql.service
@@ -192,6 +193,7 @@ StandardError=append:/opt/ipam/logs/ipam_stderr.log
 
 [Install]
 WantedBy=multi-user.target
+```
 
 **9.3 Aktifkan Service**
 
