@@ -270,10 +270,10 @@ sudo netstat -tlnp | grep 5100
 http://server-ip:5100
 
 **12.4 Cek Log**
-
+```ini
 tail -f /opt/ipam/logs/ipam.log
 sudo journalctl -u ipam -f
-
+```
 **13. Maintenance**
     
 Restart Service
@@ -308,7 +308,7 @@ with app.app_context():
 ```
 Permission Error
 ```ini
-sudo chown -R ubuntu:ubuntu /opt/ipam
+sudo chown -R $USER:$USER /opt/ipam
 sudo chmod -R 755 /opt/ipam/logs
 ```
 ✅ Setup Selesai!
