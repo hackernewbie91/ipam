@@ -7,6 +7,7 @@ from app.models import Subnet, IPAddress
 from app.forms import IPAddressForm
 from app.utils import log_activity, log_change
 from app.alerting import check_and_alert
+from app.webhook import send_webhook
 
 ips_bp = Blueprint('ips', __name__)
 
@@ -61,6 +62,13 @@ def add_ip(subnet_id):
         }
         log_change('CREATE', 'IPAddress', new_ip.id, changes)
         log_activity(f'Added IP {ip_str} to {subnet.name}')
+
+        send_webhook('ip_created', {
+            'ip': new_ip.ip_address,
+            'subnet': subnet.name,
+            'status': new_ip.status,
+            'user': current_user.username
+        })
 
         # Cek notifikasi setelah penambahan
         check_and_alert(subnet)
@@ -138,6 +146,12 @@ def edit_ip(ip_id):
 
         log_activity(f'Updated IP {ip_str} in {subnet.name}')
 
+        send_webhook('ip_updated', {
+            'ip': ip_entry.ip_address,
+            'subnet': subnet.name,
+            'user': current_user.username
+        })
+
         # Cek notifikasi setelah perubahan (misal status berubah)
         check_and_alert(subnet)
 
@@ -180,6 +194,12 @@ def delete_ip(ip_id):
 
     log_activity(f'Deleted IP {ip_entry.ip_address}')
     log_change('DELETE', 'IPAddress', ip_id, old_data)
+
+    send_webhook('ip_deleted', {
+        'ip': ip_entry.ip_address,
+        'subnet': subnet.name,
+        'user': current_user.username
+    })
 
     # Cek notifikasi setelah penghapusan
     check_and_alert(subnet)

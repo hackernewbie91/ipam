@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block page_title %}Backup Database{% endblock %}
+{% block breadcrumb %}Backup Database{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title"><i class="ti ti-database"></i> Database Backups</h3>
+        <a href="{{ url_for('main.backup_database') }}" class="btn btn-primary">
+            <i class="ti ti-download"></i> Backup Sekarang
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Form Retention Days -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-settings"></i> Auto Delete Settings</h3>
+                    </div>
+                    <div class="card-body">
+                        {% set retention = get_setting('backup_retention_days', '30') %}
+                        <form method="POST" action="{{ url_for('main.backup_settings') }}" class="row g-3 align-items-end">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="col-md-8">
+                                <label class="form-label">Hapus backup lebih lama dari (hari)</label>
+                                <input type="number" name="retention_days" class="form-control" value="{{ retention }}" min="1">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daftar Backup -->
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Filename</th>
+                        <th>Size</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in backups %}
+                    <tr>
+                        <td>{{ backup.filename }}</td>
+                        <td>{{ backup.size }}</td>
+                        <td>{{ backup.created }}</td>
+                        <td>
+                            <a href="{{ url_for('main.download_backup', filename=backup.filename) }}" class="btn btn-sm btn-success">
+                                <i class="ti ti-download"></i> Download
+                            </a>
+                            <form action="{{ url_for('main.delete_backup', filename=backup.filename) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Hapus backup ini?')">
+                                    <i class="ti ti-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">No backups yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

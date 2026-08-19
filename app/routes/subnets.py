@@ -10,6 +10,7 @@ from app.models import Subnet, IPAddress
 from app.forms import SubnetForm
 from app.utils import calculate_subnet_details, log_activity, log_change
 from app.alerting import check_and_alert
+from app.webhook import send_webhook
 
 subnets_bp = Blueprint('subnets', __name__)
 
@@ -69,6 +70,11 @@ def create_subnet():
         }
         log_change('CREATE', 'Subnet', subnet.id, changes)
         flash('Subnet created successfully.', 'success')
+        send_webhook('subnet_created', {
+            'subnet': subnet.name,
+            'network': subnet.network_address,
+            'user': current_user.username
+        })
         return redirect(url_for('subnets.list_subnets'))
     return render_template('subnet_form.html', title='Create Subnet',
                            form=form, legend='Create Subnet')
@@ -157,6 +163,11 @@ def edit_subnet(subnet_id):
 
         log_activity(f'Edited subnet {subnet.name}')
         flash('Subnet updated.', 'success')
+        send_webhook('subnet_updated', {
+            'subnet': subnet.name,
+            'network': subnet.network_address,
+            'user': current_user.username
+        })
         return redirect(url_for('subnets.subnet_detail', subnet_id=subnet.id))
     elif request.method == 'GET':
         form.name.data = subnet.name
@@ -191,6 +202,11 @@ def delete_subnet(subnet_id):
     log_activity(f'Deleted subnet {subnet.name}')
     log_change('DELETE', 'Subnet', subnet_id, old_data)
     flash('Subnet deleted.', 'success')
+    send_webhook('subnet_deleted', {
+        'subnet': subnet.name,
+        'network': subnet.network_address,
+        'user': current_user.username
+    })
     return redirect(url_for('subnets.list_subnets'))
 
 

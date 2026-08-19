@@ -264,6 +264,16 @@
                             <i class="ti ti-shield"></i> Admin Panel
                         </a>
                     </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('main.list_backups') }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="ti ti-database"></i> Backup
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('main.webhooks') }}" class="btn btn-outline-warning w-100 mb-2">
+                            <i class="ti ti-webhook"></i> Webhooks
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block page_title %}Webhooks{% endblock %}
+{% block breadcrumb %}Webhooks{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-webhook"></i> Webhook Management</h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" class="mb-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">URL</label>
+                    <input type="url" name="url" class="form-control" placeholder="https://example.com/webhook" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Event</label>
+                    <select name="event" class="form-select">
+                        <option value="all">All Events</option>
+                        <option value="ip_created">IP Created</option>
+                        <option value="ip_deleted">IP Deleted</option>
+                        <option value="subnet_created">Subnet Created</option>
+                        <option value="subnet_deleted">Subnet Deleted</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Add</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>URL</th>
+                        <th>Event</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for webhook in webhooks %}
+                    <tr>
+                        <td>{{ webhook.name }}</td>
+                        <td class="text-muted">{{ webhook.url }}</td>
+                        <td><span class="badge bg-primary">{{ webhook.event }}</span></td>
+                        <td>
+                            {% if webhook.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-muted">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('main.delete_webhook', webhook_id=webhook.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Delete webhook?')">
+                                    <i class="ti ti-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No webhooks configured.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
