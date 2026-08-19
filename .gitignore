@@ -38,5 +38,5 @@ Thumbs.db
 instance/
 flask_session/
 
-# Migrations (jika ingin di-commit, hapus baris ini)
+# Abaikan file pyc di dalam migrations
 migrations/versions/*.pyc
