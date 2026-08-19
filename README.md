@@ -6,18 +6,18 @@ sudo apt update
 sudo apt upgrade -y
 ```
 **2. Install Dependencies**
-
+```ini
 sudo apt install -y python3 python3-venv python3-pip git postgresql postgresql-contrib
-
+```
 Install Nginx (Opsional)
-
+```ini
 sudo apt install -y nginx
-
+```
 **3. Setup PostgreSQL
 3.1 Masuk ke PostgreSQL****
-   
+```ini   
 sudo -u postgres psql
-
+```
 **3.2 Buat Database & User**
 
 ```ini
@@ -47,20 +47,21 @@ python3 -m venv venv
 ```
 
 **5.2 Aktifkan Virtual Environment**
-
+```ini
 source venv/bin/activate
-
+```
 **5.3 Install Dependencies**
-
+```ini
 pip install --upgrade pip
 pip install -r requirements.txt
-
+```
 **6. Konfigurasi Environment
 6.1 Buat File .env**
-
+```ini
 nano .env
+```
 Isi dengan:
-
+```ini
 SECRET_KEY=YOUR_GENERATED_SECRET_KEY
 DATABASE_URL=postgresql://appuser:password@localhost:5432/ipam_db?sslmode=disable
 
@@ -80,28 +81,29 @@ AUTO_SCAN_INTERVAL=30
 GUNICORN_WORKERS=4
 GUNICORN_BIND=0.0.0.0:5100
 GUNICORN_LOG_LEVEL=info
-
+```
 **6.2 Generate SECRET_KEY**
-
+```ini
 python -c "import secrets; print(secrets.token_hex(32))"
+```
 Salin hasilnya ke SECRET_KEY di .env.
 
 **7. Inisialisasi Database
 7.1 Migrasi Database**
-
+```ini
 flask db upgrade
-
+```
 **7.2 Buat Admin User**
-
+```ini
 flask create-admin admin admin@domain.com password_anda
-
+```
 **8. Setup Gunicorn
 8.1 Buat File gunicorn_config.py (Jika Belum Ada)**
-
+```ini
 nano gunicorn_config.py
-
+```
 Isi:
-
+```ini
 # gunicorn_config.py
 
 import os
@@ -162,16 +164,17 @@ pidfile = 'logs/gunicorn.pid' if daemon else None
 
 # Server mechanics
 forwarded_allow_ips = '*'  # Trust X-Forwarded-For headers from proxy
-
+```
 **9. Setup Systemd Service
 9.1 Buat Folder Logs**
-
+```ini
 mkdir -p /opt/ipam/logs
 sudo chown -R ubuntu:ubuntu /opt/ipam/logs
-
+```
 **9.2 Buat Service File**
-
+```ini
 sudo nano /etc/systemd/system/ipam.service
+```
 Isi:
 
 ```ini
@@ -202,18 +205,19 @@ WantedBy=multi-user.target
 ```
 
 **9.3 Aktifkan Service**
-
+```ini
 sudo systemctl daemon-reload
 sudo systemctl start ipam
 sudo systemctl enable ipam
 sudo systemctl status ipam
-
+```
 **10. Setup Nginx (Opsional)
 10.1 Buat Config Nginx**
-    
+```ini    
 sudo nano /etc/nginx/sites-available/ipam
+```
 Isi:
-
+```ini
 nginx
 server {
     listen 80;
@@ -238,29 +242,29 @@ server {
         add_header Cache-Control "public, immutable";
     }
 }
-
+```
 **10.2 Aktifkan Nginx**
-
+```ini
 sudo ln -s /etc/nginx/sites-available/ipam /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
-
+```
 **11. Setup Firewall**
-
+```ini
 sudo ufw allow 5100/tcp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw enable
-
+```
 **12. Verifikasi
 12.1 Cek Service**
-
+```ini
 sudo systemctl status ipam
-
+```
 **12.2 Cek Port**
-
+```ini
 sudo netstat -tlnp | grep 5100
-
+```
 **12.3 Akses Aplikasi**
 
 http://server-ip:5100
@@ -273,24 +277,27 @@ sudo journalctl -u ipam -f
 **13. Maintenance**
     
 Restart Service
-
+```ini
 sudo systemctl restart ipam
 Stop Service
 
 sudo systemctl stop ipam
+```
 Backup Database
-
+```ini
 sudo -u postgres pg_dump ipam_db > backup_$(date +%Y%m%d).sql
+```
 Restore Database
-
+```ini
 sudo -u postgres psql ipam_db < backup_20260819.sql
-
+```
 **14. Troubleshooting**
 Cek Error
-
+```ini
 sudo journalctl -u ipam --since "5 minutes ago" --no-pager
+```
 Cek Koneksi Database
-
+```ini
 sudo -u ubuntu /opt/ipam/venv/bin/python -c "
 from app import create_app, db
 app = create_app()
@@ -298,11 +305,12 @@ with app.app_context():
     db.session.execute('SELECT 1')
     print('Database OK')
 "
+```
 Permission Error
-
+```ini
 sudo chown -R ubuntu:ubuntu /opt/ipam
 sudo chmod -R 755 /opt/ipam/logs
-
+```
 ✅ Setup Selesai!
 Sekarang IPAM sudah berjalan di server baru. Login dengan:
 
