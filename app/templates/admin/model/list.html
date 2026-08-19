@@ -1,0 +1,57 @@
+{% extends 'admin/master.html' %}
+{% import 'admin/model/row_actions.html' as row_actions with context %}
+
+{% block body %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title">{{ admin_view.name }}</h3>
+        {% if admin_view.can_create %}
+        <a href="{{ url_for('.create_view', url=return_url) }}" class="btn btn-primary btn-sm">
+            <i class="ti ti-plus"></i> Create
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        {% for c, name in list_columns %}
+                        <th>{{ name }}</th>
+                        {% endfor %}
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for c, name in list_columns %}
+                        <td>{{ get_value(row, c) }}</td>
+                        {% endfor %}
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                {% if admin_view.can_edit %}
+                                <a href="{{ url_for('.edit_view', id=get_pk_value(row), url=return_url) }}" class="btn btn-sm btn-warning text-white" style="min-width: 80px; border-radius: 6px; padding: 6px 14px;">
+                                    <i class="ti ti-edit"></i> Edit
+                                </a>
+                                {% endif %}
+                                {% if admin_view.can_delete %}
+                                <form action="{{ url_for('.delete_view', id=get_pk_value(row), url=return_url) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-danger" style="min-width: 80px; border-radius: 6px; padding: 6px 14px;" onclick="return confirm('Are you sure you want to delete this item?')">
+                                        <i class="ti ti-trash"></i> Delete
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="{{ list_columns|length + 1 }}" class="text-center text-muted py-4">No records found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

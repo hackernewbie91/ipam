@@ -66,10 +66,13 @@ def create_app(config_class=None):
 
     class UserAdmin(ModelView):
     # List view
+        
         column_list = ('username', 'email', 'role', 'created_at')
         column_exclude_list = ('password_hash',)
         column_searchable_list = ('username', 'email')
         column_filters = ('role',)
+
+        list_template = 'admin/model/list.html'
 
         # Sertakan role dan password di form
         form_columns = ('username', 'email', 'role', 'password')
@@ -96,7 +99,7 @@ def create_app(config_class=None):
             }.get(role, 'light')
             return Markup(f'<span class="badge bg-{badge_class} text-white">{role.capitalize()}</span>')
 
-        column_formatters = {'role': _role_formatter}
+        
 
         # Set model saat create/edit
         def on_model_change(self, form, model, is_created):
@@ -114,6 +117,8 @@ def create_app(config_class=None):
                     return False
             return super().delete_model(model)
 
+        list_template = 'admin/model/list.html'
+
     class ActivityLogAdmin(ModelView):
         can_create = False
         can_edit = False
@@ -121,57 +126,49 @@ def create_app(config_class=None):
         column_list = ('timestamp', 'user', 'action', 'object_type', 'object_id', 'changes')
         column_default_sort = ('timestamp', True)
 
-        # Formatter untuk timestamp
+        list_template = 'admin/model/list.html'
+
         def _format_timestamp(view, context, model, name):
             if model.timestamp:
-                return model.timestamp.strftime('%d-%m-%Y %H:%M:%S')
+                from pytz import timezone, utc
+                # Ganti 'Asia/Jakarta' dengan timezone server Anda
+                local_tz = timezone('Asia/Jakarta')
+                local_time = model.timestamp.replace(tzinfo=utc).astimezone(local_tz)
+                return local_time.strftime('%d-%m-%Y %H:%M:%S')
             return ''
 
-        # Formatter untuk kolom changes agar human readable
         def _format_changes(view, context, model, name):
             if not model.changes:
                 return Markup('-')
-            try:
-                data = json.loads(model.changes)
-            except Exception:
-                return Markup(f'<span class="text-muted">{model.changes}</span>')
-
-            action = model.action
+            
+            data = model.changes
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except:
+                    pass
+            
+            if not isinstance(data, dict):
+                return Markup(str(data))
+            
             lines = []
-
-            if action == 'CREATE':
-                for key, value in data.items():
-                    key_display = key.replace('_', ' ').title()
+            for key, value in data.items():
+                key_display = key.replace('_', ' ').title()
+                if isinstance(value, dict) and 'old' in value and 'new' in value:
+                    old = value['old'] if value['old'] not in (None, '', 'None') else '(empty)'
+                    new = value['new'] if value['new'] not in (None, '', 'None') else '(empty)'
+                    lines.append(
+                        f'<b>{key_display}:</b> '
+                        f'<span class="text-danger">{old}</span> '
+                        f'<i class="fas fa-arrow-right text-muted"></i> '
+                        f'<span class="text-success">{new}</span>'
+                    )
+                else:
                     lines.append(f'<b>{key_display}:</b> {value}')
-
-            elif action == 'UPDATE':
-                for key, change in data.items():
-                    key_display = key.replace('_', ' ').title()
-                    if isinstance(change, dict) and 'old' in change and 'new' in change:
-                        old = change['old'] if change['old'] not in (None, '', 'None') else '(empty)'
-                        new = change['new'] if change['new'] not in (None, '', 'None') else '(empty)'
-                        lines.append(
-                            f'<b>{key_display}:</b> '
-                            f'<span class="text-danger">{old}</span> '
-                            f'<i class="fas fa-arrow-right text-muted"></i> '
-                            f'<span class="text-success">{new}</span>'
-                        )
-                    else:
-                        lines.append(f'<b>{key_display}:</b> {change}')
-
-            elif action == 'DELETE':
-                for key, value in data.items():
-                    key_display = key.replace('_', ' ').title()
-                    lines.append(f'<b>{key_display}:</b> {value}')
-
-            else:
-                # Fallback: tampilkan JSON asli
-                return Markup(f'<pre style="max-width:300px; white-space:pre-wrap;">{json.dumps(data, indent=2)}</pre>')
-
+            
             if not lines:
                 return Markup('-')
-
-            # Gabungkan semua baris dengan <br>, batasi lebar agar muat
+            
             html = f'<div style="max-width:300px; white-space:normal; word-wrap:break-word;">{ " <br> ".join(lines) }</div>'
             return Markup(html)
 
@@ -179,6 +176,8 @@ def create_app(config_class=None):
             'timestamp': _format_timestamp,
             'changes': _format_changes
         }
+
+        
 
     admin.add_view(UserAdmin(User, db.session, name='Users', endpoint='users'))
     admin.add_view(ActivityLogAdmin(ActivityLog, db.session, name='Activity Log', endpoint='activitylog'))

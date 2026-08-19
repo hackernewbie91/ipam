@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block auth_content %}
+<div class="text-center mb-4">
+    {% set company_logo = get_setting('company_logo', None) %}
+    {% if company_logo %}
+    <img src="{{ company_logo }}" alt="Logo" class="mb-3" style="height: 80px; width: auto;">
+    {% else %}
+    <i class="ti ti-network text-primary mb-3" style="font-size: 80px;"></i>
+    {% endif %}
+    <!-- <h1 class="h2">IPAM</h1> -->
+    <p class="text-muted">IP Address Management System</p>
+</div>
+
 <div class="card card-md">
     <div class="card-body">
         <h2 class="h2 text-center mb-4">Login to your account</h2>

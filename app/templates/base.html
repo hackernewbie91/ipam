@@ -26,8 +26,14 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="{{ url_for('main.dashboard') }}">
-                        <i class="ti ti-network"></i> IPAM
+                    <a href="{{ url_for('main.dashboard') }}" class="d-flex align-items-center">
+                        {% set company_logo = get_setting('company_logo', None) %}
+                        {% if company_logo %}
+                        <img src="{{ company_logo }}" alt="Logo" class="me-2" style="height: 32px; width: auto;">
+                        {% else %}
+                        <i class="ti ti-network me-2"></i>
+                        {% endif %}
+                        IPAM
                     </a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
@@ -35,6 +41,11 @@
                     <div class="nav-item">
                         <a class="nav-link" href="/admin">
                             <i class="ti ti-shield"></i> Admin
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.upload_logo') }}">
+                            <i class="ti ti-photo"></i> Change Logo
                         </a>
                     </div>
                     {% endif %}

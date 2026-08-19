@@ -367,3 +367,128 @@ input[type="text"] {
     color: #ffffff !important;
     font-weight: 600;
 }
+
+/* Tombol delete di tabel admin */
+.table .btn-danger {
+    background-color: #d63939 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.table .btn-danger:hover {
+    background-color: #c42f2f !important;
+}
+
+.table .btn-danger i {
+    color: #ffffff !important;
+}
+
+/* Tombol delete di tabel admin */
+.table .btn-danger {
+    background-color: #d63939 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+    border-radius: 4px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.table .btn-danger:hover {
+    background-color: #c42f2f !important;
+}
+
+.table .btn-danger i {
+    color: #ffffff !important;
+}
+
+/* Jarak antara tombol Edit dan Delete */
+.btn-group .btn + .btn,
+.btn-group form + form,
+.btn-group form + .btn,
+.btn-group .btn + form {
+    margin-left: 8px !important;
+}
+
+/* Atau jika menggunakan d-flex */
+td .btn-group {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+}
+
+td form.d-inline {
+    margin-left: 8px !important;
+}
+
+/* Tombol Edit dan Delete - simetris semua sudut */
+.btn-group .btn {
+    border-radius: 6px !important;
+    padding: 6px 14px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 3px !important;
+}
+
+
+
+.btn-group .btn-danger {
+    background-color: #d63939 !important;
+    border: 1px solid #d63939 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+}
+
+/* Hapus border radius yang tidak simetris */
+.btn-group .btn:first-child,
+.btn-group .btn:last-child {
+    border-radius: 6px !important;
+}
+
+/* Pastikan jarak antar tombol */
+td .btn-group {
+    display: flex !important;
+    gap: 6px !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+}
+
+/* Hapus margin default Bootstrap */
+.btn-group .btn + .btn {
+    margin-left: 4px !important;
+}
+
+
+
+/* Pastikan form delete tidak menambah lebar */
+.btn-group form.d-inline {
+    display: inline-block !important;
+    margin: 0 !important;
+}
+
+.btn-group form.d-inline .btn {
+    min-width: 80px !important;
+}
+
+
+
+/* Khusus untuk form delete inline */
+form.d-inline .btn-danger {
+    min-width: 80px !important;
+    padding: 6px 14px !important;
+    font-size: 0.875rem !important;
+}
+
+

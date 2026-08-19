@@ -85,18 +85,20 @@
     </a>
     {% endif %}
     {% if current_user.role in ['admin', 'manager'] %}
-    <a href="{{ url_for('subnets.edit_subnet', subnet_id=subnet.id) }}" class="btn btn-warning">
-        <i class="ti ti-edit"></i> Edit
-    </a>
-    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
-        <i class="ti ti-upload"></i> Import CSV
-    </button>
-    <form action="{{ url_for('subnets.delete_subnet', subnet_id=subnet.id) }}" method="POST" class="d-inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="btn btn-danger" onclick="return confirm('Delete subnet?')">
-            <i class="ti ti-trash"></i> Delete
-        </button>
-    </form>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('subnets.edit_subnet', subnet_id=subnet.id) }}" 
+        style="width: 80px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background-color: #f59f00; color: #fff; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            <i class="ti ti-edit" style="margin-right: 4px;"></i> Edit
+        </a>
+        <form action="{{ url_for('subnets.delete_subnet', subnet_id=subnet.id) }}" method="POST" class="d-inline m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" 
+                    style="width: 80px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background-color: #d63939; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;"
+                    onclick="return confirm('Delete subnet?')">
+                <i class="ti ti-trash" style="margin-right: 4px;"></i> Delete
+            </button>
+        </form>
+    </div>
     {% endif %}
 </div>
 
@@ -144,20 +146,22 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if current_user.role in ['admin', 'manager', 'operator'] %}
-                        <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-primary text-white">
+                    {% if current_user.role in ['admin', 'manager', 'operator'] %}
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-primary text-white" style="min-width: 70px; padding: 4px 10px; font-size: 0.875rem; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;">
                             <i class="ti ti-edit"></i> Edit
                         </a>
                         <form action="{{ url_for('ips.delete_ip', ip_id=ip.id) }}" method="POST" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                            <button class="btn btn-sm btn-danger" style="min-width: 70px; padding: 4px 10px; font-size: 0.875rem; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;" onclick="return confirm('Delete?')">
                                 <i class="ti ti-trash"></i> Delete
                             </button>
                         </form>
-                        {% else %}
-                        <span class="text-muted">Read only</span>
-                        {% endif %}
-                    </td>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">Read only</span>
+                    {% endif %}
+                </td>
                 </tr>
                 {% else %}
                 <tr><td colspan="8" class="text-center text-muted py-4">No IPs allocated yet.</td></tr>

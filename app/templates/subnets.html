@@ -42,15 +42,20 @@
                     </td>
                     <td>
                         {% if current_user.role in ['admin', 'manager'] %}
-                        <a href="{{ url_for('subnets.edit_subnet', subnet_id=item.subnet.id) }}" class="btn btn-sm btn-warning text-white">
-                            <i class="ti ti-edit"></i> Edit
-                        </a>
-                        <form action="{{ url_for('subnets.delete_subnet', subnet_id=item.subnet.id) }}" method="POST" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
-                                <i class="ti ti-trash"></i> Delete
-                            </button>
-                        </form>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('subnets.edit_subnet', subnet_id=item.subnet.id) }}" 
+                            style="min-width: 80px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background-color: #f59f00; color: #fff; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                                <i class="ti ti-edit" style="margin-right: 4px;"></i> Edit
+                            </a>
+                            <form action="{{ url_for('subnets.delete_subnet', subnet_id=item.subnet.id) }}" method="POST" class="d-inline m-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" 
+                                        style="min-width: 80px; height: 36px; display: inline-flex; align-items: center; justify-content: center; background-color: #d63939; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;"
+                                        onclick="return confirm('Delete?')">
+                                    <i class="ti ti-trash" style="margin-right: 4px;"></i> Delete
+                                </button>
+                            </form>
+                        </div>
                         {% else %}
                         <span class="text-muted">Read only</span>
                         {% endif %}

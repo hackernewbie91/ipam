@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask import Blueprint, render_template, request, jsonify, current_app, flash, redirect, url_for
 from flask_login import login_required, current_user
-from app.models import Subnet, IPAddress
+from app.models import Subnet, IPAddress, Webhook
 from app.utils import calculate_subnet_details, log_change
 from app.alerting import get_subnet_utilization
 from app import db
@@ -14,6 +14,7 @@ from flask import send_from_directory
 import time
 from datetime import datetime, timedelta
 from app.utils import calculate_subnet_details, log_change, get_setting, set_setting
+from werkzeug.utils import secure_filename
 
 main_bp = Blueprint('main', __name__)
 
@@ -337,3 +338,47 @@ def delete_webhook(webhook_id):
     db.session.commit()
     flash('Webhook deleted.', 'success')
     return redirect(url_for('main.webhooks'))
+
+
+UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@main_bp.route('/admin/logo', methods=['GET', 'POST'])
+@login_required
+def upload_logo():
+    if not current_user.is_admin:
+        flash('Only admin can change logo.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    if request.method == 'POST':
+        file = request.files.get('logo')
+        if not file or file.filename == '':
+            flash('No file selected.', 'danger')
+            return redirect(request.url)
+        
+        if not allowed_file(file.filename):
+            flash('File type not allowed. Use PNG, JPG, JPEG, GIF, SVG, or WEBP.', 'danger')
+            return redirect(request.url)
+        
+        # Buat folder upload jika belum ada
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        filename = secure_filename(file.filename)
+        unique_name = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        file_path = os.path.join(upload_dir, unique_name)
+        file.save(file_path)
+        
+        # Simpan path ke setting
+        logo_url = url_for('static', filename=f'uploads/{unique_name}')
+        set_setting('company_logo', logo_url)
+        
+        flash('Logo updated successfully!', 'success')
+        return redirect(url_for('main.upload_logo'))
+    
+    current_logo = get_setting('company_logo', None)
+    return render_template('upload_logo.html', title='Change Logo', current_logo=current_logo)
