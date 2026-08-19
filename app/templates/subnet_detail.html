@@ -1,280 +1,227 @@
 {% extends "base.html" %}
+{% block page_title %}Subnet Detail - {{ subnet.name }}{% endblock %}
+{% block breadcrumb %}Subnet Detail{% endblock %}
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-4">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
-    <li class="breadcrumb-item"><a href="{{ url_for('subnets.list_subnets') }}">Subnets</a></li>
-    <li class="breadcrumb-item active">{{ subnet.name }}</li>
-  </ol>
-</nav>
 
-<!-- Subnet Overview Card -->
-<div class="card shadow-sm mb-4">
+<!-- Info Boxes -->
+<div class="row row-cards">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body p-3 text-center">
+                <div class="text-end text-muted"><i class="ti ti-network icon icon-lg"></i></div>
+                <div class="h3 m-0">{{ subnet.network_address }}</div>
+                <div class="text-muted">Network</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body p-3 text-center">
+                <div class="text-end text-muted"><i class="ti ti-check icon icon-lg"></i></div>
+                <div class="h3 m-0 text-success">{{ details.usable_hosts }}</div>
+                <div class="text-muted">Usable</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body p-3 text-center">
+                <div class="text-end text-muted"><i class="ti ti-hdd icon icon-lg"></i></div>
+                <div class="h3 m-0 text-warning">{{ allocated_count }}</div>
+                <div class="text-muted">Allocated</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card">
+            <div class="card-body p-3 text-center">
+                <div class="text-end text-muted"><i class="ti ti-circle-check icon icon-lg"></i></div>
+                <div class="h3 m-0 text-primary">{{ available }}</div>
+                <div class="text-muted">Available</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress dan Warning Threshold -->
+{% set usage_pct = (allocated_count / details.usable_hosts * 100) if details.usable_hosts > 0 else 0 %}
+<div class="card mt-3">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <h3 class="mb-1">{{ subnet.name }}</h3>
-                <span class="badge bg-primary fs-6">{{ subnet.network_address }}</span>
-            </div>
-            {% if current_user.role in ['admin', 'manager'] %}
-            <div>
-                <a href="{{ url_for('subnets.edit_subnet', subnet_id=subnet.id) }}" class="btn btn-outline-warning btn-sm me-1">
-                    <i class="bi bi-pencil"></i> Edit
-                </a>
-                <form action="{{ url_for('subnets.delete_subnet', subnet_id=subnet.id) }}" method="POST" class="d-inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete subnet?')">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
-                </form>
-            </div>
-            {% endif %}
+        <div class="d-flex justify-content-between">
+            <span>Usage</span>
+            <strong>{{ usage_pct|round(1) }}%</strong>
         </div>
-        <hr>
-        <div class="row g-3">
-            <div class="col-md-3"><small class="text-muted">Gateway</small><br><strong>{{ subnet.gateway or '-' }}</strong></div>
-            <div class="col-md-3"><small class="text-muted">VLAN</small><br><strong>{{ subnet.vlan or '-' }}</strong></div>
-            <div class="col-md-3"><small class="text-muted">Location</small><br><strong>{{ subnet.location or '-' }}</strong></div>
-            <div class="col-md-3"><small class="text-muted">DNS</small><br><strong>{{ subnet.dns_servers or '-' }}</strong></div>
-        </div>
-        <div class="mt-3">
-            <span class="badge bg-info me-2">Usable: {{ details.usable_hosts }}</span>
-            <span class="badge bg-warning text-dark me-2">Allocated: {{ allocated_count }}</span>
-            <span class="badge bg-success">Available: {{ available }}</span>
-        </div>
-        <!-- Progress Bar dan Warning Threshold -->
-        {% set usage_pct = (allocated_count / details.usable_hosts * 100) if details.usable_hosts > 0 else 0 %}
-        {% if subnet.alert_threshold and usage_pct >= subnet.alert_threshold %}
-        <div class="alert alert-warning mt-3">
-            <i class="bi bi-exclamation-triangle-fill"></i> 
-            This subnet has exceeded the alert threshold ({{ subnet.alert_threshold }}%). 
-            Current usage: {{ usage_pct|round(1) }}%.
-        </div>
-        {% endif %}
-        <div class="progress mt-2" style="height: 20px;">
+        <div class="progress mt-2" style="height: 10px;">
             <div class="progress-bar 
                 {% if subnet.alert_threshold is not none and usage_pct >= subnet.alert_threshold %}bg-danger
                 {% elif usage_pct >= 70 %}bg-warning
                 {% else %}bg-success{% endif %}" 
-                style="width: {{ usage_pct }}%;">
-                {{ usage_pct|round(1) }}%
-            </div>
+                style="width: {{ usage_pct }}%;"></div>
         </div>
+        {% if subnet.alert_threshold and usage_pct >= subnet.alert_threshold %}
+        <div class="alert alert-warning mt-3 mb-0">
+            <i class="ti ti-alert-triangle"></i> This subnet has exceeded the alert threshold ({{ subnet.alert_threshold }}%). Current usage: {{ usage_pct|round(1) }}%.
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <!-- Action Buttons -->
-<div class="d-flex justify-content-between mb-4">
-    <div>
-        {% if current_user.role in ['admin', 'manager', 'operator'] %}
-        <a href="{{ url_for('ips.add_ip', subnet_id=subnet.id) }}" class="btn btn-success me-2">
-            <i class="bi bi-plus-circle"></i> Add IP
-        </a>
-        {% endif %}
-        <button id="scanBtn" class="btn btn-info" onclick="triggerScan({{ subnet.id }})">
-            <span id="scanSpinner" class="spinner-border spinner-border-sm d-none"></span> Scan Now
+<div class="d-flex flex-wrap gap-2 mt-3">
+    {% if current_user.role in ['admin', 'manager', 'operator'] %}
+    <a href="{{ url_for('ips.add_ip', subnet_id=subnet.id) }}" class="btn btn-success">
+        <i class="ti ti-plus"></i> Add IP
+    </a>
+    <button id="scanBtn" class="btn btn-info" onclick="triggerScan({{ subnet.id }})">
+        <i class="ti ti-refresh"></i> Scan Now
+    </button>
+    {% endif %}
+    <a href="{{ url_for('subnets.ip_map', subnet_id=subnet.id) }}" class="btn btn-outline-primary">
+        <i class="ti ti-map-2"></i> IP Map
+    </a>
+    {% if current_user.role in ['admin', 'manager', 'operator'] %}
+    <a href="{{ url_for('subnets.export_csv', subnet_id=subnet.id) }}" class="btn btn-outline-success">
+        <i class="ti ti-download"></i> Export CSV
+    </a>
+    {% endif %}
+    {% if current_user.role in ['admin', 'manager'] %}
+    <a href="{{ url_for('subnets.edit_subnet', subnet_id=subnet.id) }}" class="btn btn-warning">
+        <i class="ti ti-edit"></i> Edit
+    </a>
+    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
+        <i class="ti ti-upload"></i> Import CSV
+    </button>
+    <form action="{{ url_for('subnets.delete_subnet', subnet_id=subnet.id) }}" method="POST" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger" onclick="return confirm('Delete subnet?')">
+            <i class="ti ti-trash"></i> Delete
         </button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Tabel IP -->
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-hdd"></i> Allocated & Reserved IPs</h3>
     </div>
-    <div>
-        <a href="{{ url_for('subnets.ip_map', subnet_id=subnet.id) }}" class="btn btn-outline-info me-1">
-            <i class="bi bi-grid-3x3-gap-fill"></i> IP Map
-        </a>
-        <a href="{{ url_for('subnets.export_csv', subnet_id=subnet.id) }}" class="btn btn-outline-success me-1">
-            <i class="bi bi-download"></i> Export CSV
-        </a>
-        {% if current_user.is_admin %}
-        <button type="button" class="btn btn-outline-warning me-1" data-bs-toggle="modal" data-bs-target="#importModal">
-            <i class="bi bi-upload"></i> Import CSV
-        </button>
-        {% endif %}
-        <a href="{{ url_for('subnets.list_subnets') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Subnets
-        </a>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>IP</th>
+                    <th>Status</th>
+                    <th>Hostname</th>
+                    <th>MAC</th>
+                    <th>Device</th>
+                    <th>Assigned To</th>
+                    <th>Online</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ip in ips.items %}
+                <tr>
+                    <td class="text-muted">{{ ip.ip_address }}</td>
+                    <td>
+                        {% if ip.status == 'allocated' %}
+                        <span class="badge bg-primary">allocated</span>
+                        {% elif ip.status == 'reserved' %}
+                        <span class="badge bg-warning">reserved</span>
+                        {% else %}
+                        <span class="badge bg-success">available</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ip.hostname or '-' }}</td>
+                    <td>{{ ip.mac_address or '-' }}</td>
+                    <td>{{ ip.device_type or '-' }}</td>
+                    <td>{{ ip.assigned_to or '-' }}</td>
+                    <td>
+                        {% if ip.is_online %}
+                        <span class="badge bg-success"><i class="ti ti-circle-check"></i> Online</span>
+                        {% else %}
+                        <span class="badge bg-muted"><i class="ti ti-circle-x"></i> Offline</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if current_user.role in ['admin', 'manager', 'operator'] %}
+                        <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i></a>
+                        <form action="{{ url_for('ips.delete_ip', ip_id=ip.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')"><i class="ti ti-trash"></i></button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">Read only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No IPs allocated yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
-<!-- IP Address Table -->
-<div class="card shadow-sm">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="bi bi-hdd-stack me-2"></i>Allocated & Reserved IPs</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>IP</th>
-                        <th>Status</th>
-                        <th>Hostname</th>
-                        <th>MAC</th>
-                        <th>Device</th>
-                        <th>Assigned To</th>
-                        <th>Online</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for ip in ips.items %}
-                    <tr>
-                        <td>
-                            <span class="fw-mono">{{ ip.ip_address }}</span>
-                            {% if ip.is_online %}
-                            <span class="badge bg-success ms-1" title="Online since {{ ip.last_seen.strftime('%Y-%m-%d %H:%M') if ip.last_seen }}">●</span>
-                            {% else %}
-                            <span class="badge bg-secondary ms-1" title="Offline">○</span>
-                            {% endif %}
-                        </td>
-                        <td><span class="badge bg-{{ 'success' if ip.status=='allocated' else 'secondary' }}">{{ ip.status }}</span></td>
-                        <td>{{ ip.hostname or '-' }}</td>
-                        <td><small>{{ ip.mac_address or '-' }}</small></td>
-                        <td>{{ ip.device_type or '-' }}</td>
-                        <td>{{ ip.assigned_to or '-' }}</td>
-                        <td>
-                            {% if ip.is_online %}
-                            <span class="badge bg-success">Online</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Offline</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if current_user.role in ['admin', 'manager', 'operator'] %}
-                            <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                            <form action="{{ url_for('ips.delete_ip', ip_id=ip.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')"><i class="bi bi-trash"></i></button>
-                            </form>
-                            {% else %}
-                            <span class="text-muted small">Read only</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">No IPs allocated yet. <a href="{{ url_for('ips.add_ip', subnet_id=subnet.id) }}">Add one</a>.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Available IPs (Free) -->
+<!-- Available IPs -->
 {% if free_ips %}
-<div class="card shadow-sm mt-4">
-    <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Available IPs ({{ free_ips|length }})</h5>
+<div class="card mt-3">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-check"></i> Available IPs ({{ free_ips|length }})</h3>
     </div>
     <div class="card-body">
         <div class="d-flex flex-wrap gap-1">
             {% for ip in free_ips %}
-                <span class="badge bg-success fs-6">{{ ip }}</span>
+            <span class="badge bg-success">{{ ip }}</span>
             {% endfor %}
         </div>
     </div>
 </div>
 {% else %}
-<div class="alert alert-info mt-4">
-    <i class="bi bi-info-circle"></i> No free IPs available in this subnet.
-</div>
+<div class="alert alert-info mt-3"><i class="ti ti-info-circle"></i> No free IPs available in this subnet.</div>
 {% endif %}
 
-<!-- Mini IP Map Preview -->
-<div class="card shadow-sm mt-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> IP Usage Overview</h5>
-        <a href="{{ url_for('subnets.ip_map', subnet_id=subnet.id) }}" class="btn btn-sm btn-outline-info">
-            <i class="bi bi-zoom-in"></i> View Full Map
-        </a>
-    </div>
-    <div class="card-body">
-        {% if details.usable_hosts > 0 and details.usable_hosts <= 512 %}
-            {% set used_ips_dict = {} %}
-            {% for ip in ips.items %}
-                {% set _ = used_ips_dict.update({ip.ip_address: {'status': ip.status, 'online': ip.is_online}}) %}
-            {% endfor %}
-            
-            <div style="display: grid; grid-template-columns: repeat(32, 1fr); gap: 2px;">
-                {% for i in range(details.usable_hosts) %}
-                    {% set current_ip = details.first_usable|string %}
-                    {% set octets = current_ip.split('.') %}
-                    {% set ip_int = octets[0]|int * 16777216 + octets[1]|int * 65536 + octets[2]|int * 256 + octets[3]|int + i %}
-                    {% set o1 = (ip_int // 16777216) % 256 %}
-                    {% set o2 = (ip_int // 65536) % 256 %}
-                    {% set o3 = (ip_int // 256) % 256 %}
-                    {% set o4 = ip_int % 256 %}
-                    {% set ip_str = '{}.{}.{}.{}'.format(o1, o2, o3, o4) %}
-                    
-                    {% if ip_str in used_ips_dict %}
-                        {% if used_ips_dict[ip_str].status == 'allocated' %}
-                            <span class="badge bg-primary" style="height: 14px; padding: 0; cursor: pointer; border-radius: 2px;" title="{{ ip_str }} - Allocated{% if used_ips_dict[ip_str].online %} (Online){% endif %}"></span>
-                        {% else %}
-                            <span class="badge bg-secondary" style="height: 14px; padding: 0; cursor: pointer; border-radius: 2px;" title="{{ ip_str }} - Reserved{% if used_ips_dict[ip_str].online %} (Online){% endif %}"></span>
-                        {% endif %}
-                    {% else %}
-                        <span class="badge bg-success" style="height: 14px; padding: 0; opacity: 0.4; cursor: pointer; border-radius: 2px;" title="{{ ip_str }} - Free"></span>
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <div class="d-flex justify-content-between mt-2 small text-muted">
-                <span>{{ details.first_usable }}</span>
-                <span>{{ details.last_usable }}</span>
-            </div>
-        {% else %}
-            <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle"></i> 
-                {% if details.usable_hosts == 0 %}
-                    No usable IPs in this subnet.
-                {% else %}
-                    Subnet too large for preview ({{ details.usable_hosts }} IPs). 
-                    <a href="{{ url_for('subnets.ip_map', subnet_id=subnet.id) }}" class="alert-link">View Full Map</a>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-</div>
-
 <!-- Pagination -->
-<nav class="mt-4">
-    <ul class="pagination justify-content-center">
+<div class="d-flex justify-content-center mt-3">
+    <ul class="pagination">
         {% if ips.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=ips.prev_num) }}"><i class="bi bi-chevron-left"></i></a></li>
+        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=ips.prev_num) }}"><i class="ti ti-chevron-left"></i></a></li>
         {% endif %}
         {% for p in ips.iter_pages() %}
             {% if p %}
-                <li class="page-item {% if p == ips.page %}active{% endif %}"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=p) }}">{{ p }}</a></li>
+            <li class="page-item {% if p == ips.page %}active{% endif %}"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=p) }}">{{ p }}</a></li>
             {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
+            <li class="page-item disabled"><span class="page-link">…</span></li>
             {% endif %}
         {% endfor %}
         {% if ips.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=ips.next_num) }}"><i class="bi bi-chevron-right"></i></a></li>
+        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id, page=ips.next_num) }}"><i class="ti ti-chevron-right"></i></a></li>
         {% endif %}
     </ul>
-</nav>
+</div>
 
 <!-- Import Modal -->
-<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
     <div class="modal-content">
       <form method="POST" action="{{ url_for('subnets.import_csv', subnet_id=subnet.id) }}" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header">
-          <h5 class="modal-title" id="importModalLabel"><i class="bi bi-upload me-2"></i>Import IPs from CSV</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title">Import IPs from CSV</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <p>Upload a CSV file with the following columns:</p>
           <code>ip_address, status, hostname, mac_address, device_type, assigned_to, description</code>
           <div class="mb-3 mt-3">
-            <label for="csvFile" class="form-label">Select CSV File</label>
-            <input class="form-control" type="file" id="csvFile" name="csv_file" accept=".csv" required>
+            <label class="form-label">Select CSV File</label>
+            <input type="file" name="csv_file" class="form-control" accept=".csv" required>
           </div>
           <div class="form-text text-muted">The first row must be the header. IP address is mandatory. Existing IPs will be skipped.</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Import</button>
+          <button type="submit" class="btn btn-primary">Import</button>
         </div>
       </form>
     </div>
@@ -283,14 +230,13 @@
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
 function triggerScan(subnetId) {
     const btn = document.getElementById('scanBtn');
-    const spinner = document.getElementById('scanSpinner');
-    if (!btn || !spinner) return;
+    if (!btn) return;
     btn.disabled = true;
-    spinner.classList.remove('d-none');
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Scanning...';
+    btn.innerHTML = '<i class="ti ti-refresh"></i> Scanning...';
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const scanUrl = "{{ url_for('subnets.scan_subnet_route', subnet_id=0) }}".replace('0', subnetId);
     fetch(scanUrl, {
@@ -308,8 +254,7 @@ function triggerScan(subnetId) {
     })
     .finally(() => {
         btn.disabled = false;
-        spinner.classList.add('d-none');
-        btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Scan Now';
+        btn.innerHTML = '<i class="ti ti-refresh"></i> Scan Now';
     });
 }
 </script>

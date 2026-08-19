@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% block page_title %}IP Map - {{ subnet.name }}{% endblock %}
+{% block breadcrumb %}IP Map{% endblock %}
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-4">
+<nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
     <li class="breadcrumb-item"><a href="{{ url_for('subnets.list_subnets') }}">Subnets</a></li>
@@ -9,31 +11,25 @@
   </ol>
 </nav>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-grid-3x3-gap-fill me-2"></i>IP Map: {{ subnet.name }}</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="fas fa-map"></i> IP Map: {{ subnet.name }}</h2>
     <div>
-        <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-outline-secondary me-2">
-            <i class="bi bi-list-ul"></i> Table View
-        </a>
-        <button id="refreshMap" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-clockwise"></i> Refresh
-        </button>
+        <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-outline-secondary mr-2"><i class="fas fa-list-ul"></i> Table View</a>
+        <button id="refreshMap" class="btn btn-outline-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
     </div>
 </div>
 
-<div class="row mb-4">
+<div class="row">
     <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-grid-3x3-gap"></i> IP Grid</h5>
-                <div>
-                    <small class="text-muted">Network: {{ subnet.network_address }}</small>
-                </div>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title"><i class="fas fa-grid-3x3-gap"></i> IP Grid</h3>
+                <small class="text-muted">Network: {{ subnet.network_address }}</small>
             </div>
             <div class="card-body" id="ipGridContainer">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="sr-only">Loading...</span>
                     </div>
                     <p class="mt-2 text-muted">Loading IP map...</p>
                 </div>
@@ -41,36 +37,36 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card shadow-sm mb-3">
-            <div class="card-header bg-white">
-                <h6 class="mb-0"><i class="bi bi-palette"></i> Legend</h6>
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="card-title"><i class="fas fa-palette"></i> Legend</h6>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-success me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span class="badge badge-success mr-2" style="width: 20px; height: 20px;">&nbsp;</span>
                     <span>Free / Available</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-primary me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span class="badge badge-primary mr-2" style="width: 20px; height: 20px;">&nbsp;</span>
                     <span>Allocated</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-secondary me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span class="badge badge-secondary mr-2" style="width: 20px; height: 20px;">&nbsp;</span>
                     <span>Reserved</span>
                 </div>
                 <div class="d-flex align-items-center mb-2">
-                    <span class="badge bg-danger me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span class="badge badge-danger mr-2" style="width: 20px; height: 20px;">&nbsp;</span>
                     <span>Gateway</span>
                 </div>
                 <div class="d-flex align-items-center">
-                    <span class="badge bg-info me-2" style="width: 20px; height: 20px;">&nbsp;</span>
+                    <span class="badge badge-info mr-2" style="width: 20px; height: 20px;">&nbsp;</span>
                     <span>Online (dot in corner)</span>
                 </div>
             </div>
         </div>
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h6 class="mb-0"><i class="bi bi-info-circle"></i> Network Info</h6>
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title"><i class="fas fa-info-circle"></i> Network Info</h6>
             </div>
             <div class="card-body" id="networkInfo">
                 <p class="text-muted">Loading...</p>
@@ -81,10 +77,10 @@
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     loadIPMap();
-    
     document.getElementById('refreshMap').addEventListener('click', loadIPMap);
 });
 
@@ -96,13 +92,13 @@ function loadIPMap() {
     container.innerHTML = `
         <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="sr-only">Loading...</span>
             </div>
             <p class="mt-2 text-muted">Loading IP map...</p>
         </div>
     `;
     
-    fetch(`/subnets/${subnetId}/ipmap/data`)
+    fetch("{{ url_for('subnets.ip_map_data', subnet_id=0) }}".replace('0', subnetId))
         .then(response => response.json())
         .then(data => {
             renderIPGrid(data, container, networkInfo);
@@ -111,7 +107,7 @@ function loadIPMap() {
             console.error('Error loading IP map:', error);
             container.innerHTML = `
                 <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle"></i> 
+                    <i class="fas fa-exclamation-triangle"></i> 
                     Failed to load IP map. Please try again.
                 </div>
             `;
@@ -122,20 +118,17 @@ function renderIPGrid(data, container, networkInfo) {
     const ips = data.ips;
     const info = data.network_info;
     
-    // Tentukan ukuran grid (kolom per baris)
-    // Untuk subnet besar, gunakan 16 kolom; subnet kecil gunakan 8
     let cols = 16;
     if (ips.length <= 32) cols = 8;
-    if (ips.length <= 64) cols = 16;
+    else if (ips.length <= 64) cols = 16;
     else if (ips.length <= 128) cols = 16;
     else if (ips.length <= 256) cols = 16;
     else cols = 32;
     
-    // Update network info
     networkInfo.innerHTML = `
         <div class="mb-2">
             <small class="text-muted">Network</small><br>
-            <strong>${info.network}/${data.ips.length > 0 ? (32 - Math.log2(info.total_ips + 2)) : ''}</strong>
+            <strong>${info.network}</strong>
         </div>
         <div class="mb-2">
             <small class="text-muted">Netmask</small><br>
@@ -155,7 +148,6 @@ function renderIPGrid(data, container, networkInfo) {
         </div>
     `;
     
-    // Buat grid
     let html = '<div style="display: grid; grid-template-columns: repeat(' + cols + ', 1fr); gap: 4px;">';
     
     ips.forEach((ip, index) => {
@@ -173,18 +165,15 @@ function renderIPGrid(data, container, networkInfo) {
             if (ip.hostname) title += `\nHostname: ${ip.hostname}`;
         }
         
-        // Tandai gateway
         if (ip.ip === info.gateway) {
             bgClass = 'bg-danger';
             title += '\n[GATEWAY]';
         }
         
-        // Tandai online
         if (ip.online) {
-            dotHtml = '<span style="position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; background: #0dcaf0; border-radius: 50%;"></span>';
+            dotHtml = '<span style="position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; background: #00c0ef; border-radius: 50%;"></span>';
         }
         
-        // Tandai network dan broadcast
         if (ip.ip === info.network) {
             bgClass = 'bg-dark';
             title = `Network Address: ${ip.ip}`;
@@ -198,8 +187,8 @@ function renderIPGrid(data, container, networkInfo) {
             <div class="badge ${bgClass} d-flex align-items-center justify-content-center position-relative"
                  style="height: 40px; cursor: pointer; font-size: 10px;"
                  title="${title}"
-                 onclick="showIPDetail('${ip.ip}', '${ip.status}', '${ip.hostname}', ${ip.online})"
-                 data-bs-toggle="tooltip" data-bs-placement="top">
+                 data-toggle="tooltip" data-placement="top"
+                 onclick="showIPDetail('${ip.ip}', '${ip.status}', '${ip.hostname}', ${ip.online})">
                 ${ip.ip.split('.').pop()}
                 ${dotHtml}
             </div>
@@ -210,10 +199,8 @@ function renderIPGrid(data, container, networkInfo) {
     
     container.innerHTML = html;
     
-    // Aktifkan tooltip
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el);
     });
 }
 
@@ -223,13 +210,9 @@ function showIPDetail(ip, status, hostname, online) {
     if (online) message += `\nStatus: Online`;
     else message += `\nStatus: Offline`;
     
-    // Jika IP allocated/reserved, tawarkan untuk edit
     if (status === 'allocated' || status === 'reserved') {
-        message += `\n\nClick OK to view/edit this IP.`;
+        message += `\n\nClick OK to go to subnet detail.`;
         if (confirm(message)) {
-            // Redirect ke halaman edit IP jika memungkinkan
-            // Catatan: kita perlu mencari ID IP dari IP address
-            // Untuk sementara, kita arahkan ke halaman detail subnet
             window.location.href = "{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}";
         }
     } else {

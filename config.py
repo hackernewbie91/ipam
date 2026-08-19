@@ -9,6 +9,16 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'ipam.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # ========== DATABASE CONNECTION POOL ==========
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'pool_recycle': 300,
+        'pool_pre_ping': True,
+        'pool_timeout': 30,
+        'max_overflow': 20,
+    }
+
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT', 'false').lower() == 'true'
     ITEMS_PER_PAGE = 25
 

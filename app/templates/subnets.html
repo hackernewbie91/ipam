@@ -1,101 +1,64 @@
 {% extends "base.html" %}
+{% block page_title %}Subnets{% endblock %}
+{% block breadcrumb %}Subnets{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-diagram-2 me-2"></i>Subnets</h2>
-    {% if current_user.role in ['admin', 'manager'] %}
-    <a href="{{ url_for('subnets.create_subnet') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add Subnet
-    </a>
-    {% endif %}
-</div>
-
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Name</th>
-                        <th>Network</th>
-                        <th>VLAN</th>
-                        <th>Location</th>
-                        <th>Gateway</th>
-                        <th>Utilization</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in subnet_data %}
-                    <tr>
-                        <td>
-                            <a href="{{ url_for('subnets.subnet_detail', subnet_id=item.subnet.id) }}" class="fw-bold text-decoration-none">
-                                {{ item.subnet.name }}
-                            </a>
-                        </td>
-                        <td><span class="badge bg-light text-dark">{{ item.subnet.network_address }}</span></td>
-                        <td>{{ item.subnet.vlan or '-' }}</td>
-                        <td>{{ item.subnet.location or '-' }}</td>
-                        <td>{{ item.subnet.gateway or '-' }}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                                    <div class="progress-bar 
-                                        {% if item.subnet.alert_threshold is not none and item.usage_pct >= item.subnet.alert_threshold %}bg-danger
-                                        {% elif item.usage_pct >= 70 %}bg-warning
-                                        {% else %}bg-success{% endif %}" 
-                                        style="width: {{ item.usage_pct }}%;">
-                                    </div>
-                                </div>
-                                <span class="small">{{ item.usage_pct }}%</span>
-                                {% if item.subnet.alert_threshold and item.usage_pct >= item.subnet.alert_threshold %}
-                                    <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Threshold exceeded!"></i>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            {% if current_user.role in ['admin', 'manager'] %}
-                            <a href="{{ url_for('subnets.edit_subnet', subnet_id=item.subnet.id) }}" class="btn btn-sm btn-outline-warning me-1">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="{{ url_for('subnets.delete_subnet', subnet_id=item.subnet.id) }}" method="POST" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                            {% else %}
-                            <span class="text-muted small">Read only</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No subnets found. <a href="{{ url_for('subnets.create_subnet') }}">Create one</a>.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title"><i class="ti ti-topology-star-3"></i> Subnets</h3>
+        {% if current_user.role in ['admin', 'manager'] %}
+        <a href="{{ url_for('subnets.create_subnet') }}" class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Add Subnet</a>
+        {% endif %}
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Network</th>
+                    <th>VLAN</th>
+                    <th>Location</th>
+                    <th>Gateway</th>
+                    <th>Utilization</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in subnet_data %}
+                <tr>
+                    <td><a href="{{ url_for('subnets.subnet_detail', subnet_id=item.subnet.id) }}" class="fw-bold">{{ item.subnet.name }}</a></td>
+                    <td><span class="badge bg-muted">{{ item.subnet.network_address }}</span></td>
+                    <td>{{ item.subnet.vlan or '-' }}</td>
+                    <td>{{ item.subnet.location or '-' }}</td>
+                    <td>{{ item.subnet.gateway or '-' }}</td>
+                    <td>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar 
+                                {% if item.subnet.alert_threshold is not none and item.usage_pct >= item.subnet.alert_threshold %}bg-danger
+                                {% elif item.usage_pct >= 70 %}bg-warning
+                                {% else %}bg-success{% endif %}" 
+                                style="width: {{ item.usage_pct }}%;"></div>
+                        </div>
+                        <small>{{ item.usage_pct }}%</small>
+                    </td>
+                    <td>
+                        {% if current_user.role in ['admin', 'manager'] %}
+                        <a href="{{ url_for('subnets.edit_subnet', subnet_id=item.subnet.id) }}" class="btn btn-sm btn-warning text-white">
+                            <i class="ti ti-edit"></i> Edit
+                        </a>
+                        <form action="{{ url_for('subnets.delete_subnet', subnet_id=item.subnet.id) }}" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                <i class="ti ti-trash"></i> Delete
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">Read only</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-
-<nav class="mt-4">
-    <ul class="pagination justify-content-center">
-        {% if subnets.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.list_subnets', page=subnets.prev_num) }}"><i class="bi bi-chevron-left"></i></a></li>
-        {% endif %}
-        {% for page_num in subnets.iter_pages() %}
-            {% if page_num %}
-                <li class="page-item {% if page_num == subnets.page %}active{% endif %}">
-                    <a class="page-link" href="{{ url_for('subnets.list_subnets', page=page_num) }}">{{ page_num }}</a>
-                </li>
-            {% else %}
-                <li class="page-item disabled"><span class="page-link">…</span></li>
-            {% endif %}
-        {% endfor %}
-        {% if subnets.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('subnets.list_subnets', page=subnets.next_num) }}"><i class="bi bi-chevron-right"></i></a></li>
-        {% endif %}
-    </ul>
-</nav>
 {% endblock %}
