@@ -1,10 +1,10 @@
 # HOW TO INSTALL
 
 **1. Update System**
-   
+```ini   
 sudo apt update
 sudo apt upgrade -y
-
+```
 **2. Install Dependencies**
 
 sudo apt install -y python3 python3-venv python3-pip git postgresql postgresql-contrib
@@ -20,25 +20,31 @@ sudo -u postgres psql
 
 **3.2 Buat Database & User**
 
+```ini
 CREATE USER ipam_user WITH PASSWORD 'password_anda';
 CREATE DATABASE ipam_db OWNER ipam_user;
 GRANT ALL PRIVILEGES ON DATABASE ipam_db TO ipam_user;
 \q
+```
 
 Catatan: Ganti password_anda dengan password yang kuat.
 
 **4. Clone Repository**
-   
+
+```ini
 cd /opt
 sudo git clone https://github.com/hackernewbie91/ipam.git
 cd ipam
 sudo chown -R ubuntu:ubuntu /opt/ipam
+```
 
 **5. Setup Virtual Environment
 5.1 Buat Virtual Environment**
 
+```ini
 cd /opt/ipam
 python3 -m venv venv
+```
 
 **5.2 Aktifkan Virtual Environment**
 
