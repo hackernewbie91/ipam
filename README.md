@@ -2,12 +2,7 @@
 
 <img width="851" height="321" alt="image" src="https://github.com/user-attachments/assets/2853803b-177f-4eac-857e-fdfd96193b50" />
 
-<img width="650" height="448" alt="image" src="https://github.com/user-attachments/assets/8d1f36f6-b538-422a-b30c-87152c50d5f6" />
-
-
-
-
-
+<img width="651" height="452" alt="image" src="https://github.com/user-attachments/assets/59177dbf-a735-4e2e-9368-d9278bf25435" />
 
 
 # HOW TO INSTALL
