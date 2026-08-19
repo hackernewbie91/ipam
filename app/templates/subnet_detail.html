@@ -145,10 +145,14 @@
                     </td>
                     <td>
                         {% if current_user.role in ['admin', 'manager', 'operator'] %}
-                        <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-primary"><i class="ti ti-edit"></i></a>
+                        <a href="{{ url_for('ips.edit_ip', ip_id=ip.id) }}" class="btn btn-sm btn-primary text-white">
+                            <i class="ti ti-edit"></i> Edit
+                        </a>
                         <form action="{{ url_for('ips.delete_ip', ip_id=ip.id) }}" method="POST" class="d-inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')"><i class="ti ti-trash"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                <i class="ti ti-trash"></i> Delete
+                            </button>
                         </form>
                         {% else %}
                         <span class="text-muted">Read only</span>
