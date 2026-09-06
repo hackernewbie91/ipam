@@ -319,6 +319,28 @@ sudo chown -R $USER:$USER /opt/ipam
 sudo chmod -R 755 /opt/ipam/logs
 ```
 ✅ Setup Selesai!
+
+**1. Reset via Flask Shell (Paling Cepat)**
+```ini
+cd /opt/ipam
+source venv/bin/activate
+flask shell
+```
+Lalu ketik satu per satu:
+
+```ini
+from app import db
+from app.models import User
+
+user = User.query.filter_by(username='admin').first()
+if user:
+    user.set_password('password_baru_anda')
+    db.session.commit()
+    print('Password berhasil diubah')
+else:
+    print('User admin tidak ditemukan')
+```
+Tekan Enter dua kali setelah baris terakhir agar blok selesai, lalu ketik:
 Sekarang IPAM sudah berjalan di server baru. Login dengan:
 
 URL: http://server-ip:5100
