@@ -114,3 +114,24 @@ class Webhook(db.Model):
     event = db.Column(db.String(50), nullable=False)  # all, ip_created, ip_deleted, subnet_created, etc.
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+class PortMapping(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address_id = db.Column(db.Integer, db.ForeignKey('ip_address.id'), nullable=True)
+    switch_name = db.Column(db.String(100), nullable=False)
+    port_number = db.Column(db.Integer, nullable=False)
+    device_name = db.Column(db.String(100))
+    vlan = db.Column(db.Integer)
+    status = db.Column(db.String(20), default='active')  # active, reserved, free
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    ip_address = db.relationship('IPAddress', backref=db.backref('port_mapping', uselist=False))
+
+    __table_args__ = (
+        db.UniqueConstraint('switch_name', 'port_number', name='unique_switch_port'),
+    )
+
+    def __repr__(self):
+        return f'<PortMapping {self.switch_name}:{self.port_number}>'

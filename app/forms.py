@@ -57,3 +57,17 @@ class ResetPasswordForm(FlaskForm):
     password = PasswordField('New Password', validators=[DataRequired(), Length(min=6)])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Reset Password')
+    
+class PortMappingForm(FlaskForm):
+    switch_name = StringField('Switch Name', validators=[DataRequired(), Length(max=100)])
+    port_number = IntegerField('Port Number', validators=[DataRequired()])
+    ip_address = StringField('IP Address', validators=[Optional(), Length(max=15)])
+    device_name = StringField('Device Name', validators=[Optional(), Length(max=100)])
+    vlan = IntegerField('VLAN', validators=[Optional()])
+    status = SelectField('Status', choices=[
+        ('active', 'Active'),
+        ('reserved', 'Reserved'),
+        ('free', 'Free')
+    ], default='active')
+    description = TextAreaField('Description')
+    submit = SubmitField('Save')

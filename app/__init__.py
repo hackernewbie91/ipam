@@ -15,6 +15,7 @@ import click
 import json
 from app.scheduler import start_auto_scan, stop_auto_scan
 
+
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
@@ -43,12 +44,14 @@ def create_app(config_class=None):
     from app.routes.subnets import subnets_bp
     from app.routes.ips import ips_bp
     from app.routes.api import api_bp
+    from app.routes.port_mapping import port_mapping_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(subnets_bp, url_prefix='/subnets')
     app.register_blueprint(ips_bp, url_prefix='/ips')
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(port_mapping_bp, url_prefix='/port-mapping')
     csrf.exempt(api_bp)   # Hanya API yang dikecualikan
 
     # Inisialisasi auto scan jika diaktifkan
