@@ -45,6 +45,7 @@ def create_app(config_class=None):
     from app.routes.ips import ips_bp
     from app.routes.api import api_bp
     from app.routes.port_mapping import port_mapping_bp
+    from app.routes.dns_servers import dns_servers_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -52,6 +53,7 @@ def create_app(config_class=None):
     app.register_blueprint(ips_bp, url_prefix='/ips')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(port_mapping_bp, url_prefix='/port-mapping')
+    app.register_blueprint(dns_servers_bp, url_prefix='/dns-servers')
     csrf.exempt(api_bp)   # Hanya API yang dikecualikan
 
     # Inisialisasi auto scan jika diaktifkan

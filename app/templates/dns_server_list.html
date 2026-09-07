@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block page_title %}DNS Servers{% endblock %}
+{% block breadcrumb %}DNS Servers{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title"><i class="ti ti-server"></i> DNS Servers</h3>
+        <a href="{{ url_for('dns_servers.create_dns_server') }}" class="btn btn-primary btn-sm">
+            <i class="ti ti-plus"></i> Add DNS Server
+        </a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Provider</th>
+                    <th>Host</th>
+                    <th>Zone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for server in servers %}
+                <tr>
+                    <td>{{ server.name }}</td>
+                    <td><span class="badge bg-info">{{ server.provider }}</span></td>
+                    <td>{{ server.host }}</td>
+                    <td>{{ server.zone_name or '-' }}</td>
+                    <td>
+                        {% if server.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <form action="{{ url_for('dns_servers.test_dns_server', server_id=server.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-info" title="Test Connection">
+                                    <i class="ti ti-plug"></i> Test
+                                </button>
+                            </form>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ url_for('dns_servers.test_dns_server', server_id=server.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-info" title="Test Connection">
+                                            <i class="ti ti-plug"></i> Test
+                                        </button>
+                                    </form>
+                                    <!-- Tombol Records -->
+                                    <a href="{{ url_for('dns_servers.view_dns_records', server_id=server.id) }}" class="btn btn-sm btn-outline-info">
+                                        <i class="ti ti-eye"></i> Records
+                                    </a>
+                                    <a href="{{ url_for('dns_servers.edit_dns_server', server_id=server.id) }}" class="btn btn-sm btn-warning text-white">
+                                        <i class="ti ti-edit"></i> Edit
+                                    </a>
+                                    <form action="{{ url_for('dns_servers.delete_dns_server', server_id=server.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                            <i class="ti ti-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            <a href="{{ url_for('dns_servers.edit_dns_server', server_id=server.id) }}" class="btn btn-sm btn-warning text-white">
+                                <i class="ti ti-edit"></i> Edit
+                            </a>
+                            <form action="{{ url_for('dns_servers.delete_dns_server', server_id=server.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">
+                                    <i class="ti ti-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No DNS servers configured.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

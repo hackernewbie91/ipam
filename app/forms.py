@@ -73,3 +73,21 @@ class PortMappingForm(FlaskForm):
     ], default='active')
     description = TextAreaField('Description')
     submit = SubmitField('Save')
+
+class DNSServerForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(max=100)])
+    provider = SelectField('Provider', choices=[
+        ('windows', 'Windows Server DNS (Active Directory)'),
+        ('bind', 'BIND DNS'),
+        ('powerdns', 'PowerDNS')
+    ], validators=[DataRequired()])
+    host = StringField('Host/IP Address', validators=[DataRequired(), Length(max=255)])
+    port = IntegerField('Port', validators=[Optional()])
+    username = StringField('Username', validators=[Optional(), Length(max=100)])
+    password = PasswordField('Password', validators=[Optional()])
+    api_url = StringField('API URL (PowerDNS)', validators=[Optional(), Length(max=500)])
+    api_key = StringField('API Key (PowerDNS)', validators=[Optional(), Length(max=255)])
+    zone_name = StringField('Zone Name (example.com)', validators=[Optional(), Length(max=255)])
+    reverse_zone = StringField('Reverse Zone (1.168.192.in-addr.arpa)', validators=[Optional(), Length(max=255)])
+    is_active = BooleanField('Active')
+    submit = SubmitField('Save')

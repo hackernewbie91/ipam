@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block page_title %}{{ legend }}{% endblock %}
+{% block breadcrumb %}{{ legend }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">{{ legend }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.name.label }}</label>
+                            {{ form.name(class="form-control", placeholder="DC-DNS-01") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.provider.label }}</label>
+                            {{ form.provider(class="form-select") }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-8">
+                            <label class="form-label">{{ form.host.label }}</label>
+                            {{ form.host(class="form-control", placeholder="192.168.1.10") }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.port.label }}</label>
+                            {{ form.port(class="form-control", placeholder="5985") }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.username.label }}</label>
+                            {{ form.username(class="form-control", placeholder="administrator") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.password.label }}</label>
+                            {{ form.password(class="form-control", placeholder="Password") }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.zone_name.label }}</label>
+                            {{ form.zone_name(class="form-control", placeholder="example.com") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.reverse_zone.label }}</label>
+                            {{ form.reverse_zone(class="form-control", placeholder="1.168.192.in-addr.arpa") }}
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.api_url.label }}</label>
+                            {{ form.api_url(class="form-control", placeholder="http://pdns:8081/api/v1") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.api_key.label }}</label>
+                            {{ form.api_key(class="form-control", placeholder="API Key") }}
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-check">
+                            {{ form.is_active(class="form-check-input") }}
+                            <span class="form-check-label">Active</span>
+                        </label>
+                    </div>
+                    <div class="text-end mt-4">
+                        <a href="{{ url_for('dns_servers.list_dns_servers') }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

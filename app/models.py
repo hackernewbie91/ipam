@@ -153,3 +153,22 @@ class LoginHistory(db.Model):
 
     def __repr__(self):
         return f'<LoginHistory {self.user.username} - {self.login_time}>'
+
+class DNSServer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    provider = db.Column(db.String(50), nullable=False)  # windows, bind, powerdns
+    host = db.Column(db.String(255))  # IP/hostname DNS server
+    port = db.Column(db.Integer, default=5985)  # WinRM: 5985, SSH: 22, API: 8081
+    username = db.Column(db.String(100))
+    password = db.Column(db.String(255))
+    api_url = db.Column(db.String(500))  # untuk PowerDNS
+    api_key = db.Column(db.String(255))  # untuk PowerDNS
+    zone_name = db.Column(db.String(255))  # misal: example.com
+    reverse_zone = db.Column(db.String(255))  # misal: 1.168.192.in-addr.arpa
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<DNSServer {self.name} ({self.provider})>'
