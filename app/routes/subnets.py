@@ -1,14 +1,13 @@
 import csv
-from app.utils import role_required
 import io
 import ipaddress
 import json
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
 from app import db
-from app.models import Subnet, IPAddress
+from app.models import Subnet, IPAddress, PortMapping
 from app.forms import SubnetForm
-from app.utils import calculate_subnet_details, log_activity, log_change
+from app.utils import calculate_subnet_details, log_activity, log_change, role_required
 from app.alerting import check_and_alert
 from app.webhook import send_webhook
 
@@ -57,7 +56,6 @@ def create_subnet():
         db.session.add(subnet)
         db.session.commit()
         log_activity(f'Created subnet {subnet.name}')
-        # Audit trail
         changes = {
             'name': subnet.name,
             'network': subnet.network_address,
@@ -69,12 +67,12 @@ def create_subnet():
             'alert_threshold': subnet.alert_threshold
         }
         log_change('CREATE', 'Subnet', subnet.id, changes)
-        flash('Subnet created successfully.', 'success')
         send_webhook('subnet_created', {
             'subnet': subnet.name,
             'network': subnet.network_address,
             'user': current_user.username
         })
+        flash('Subnet created successfully.', 'success')
         return redirect(url_for('subnets.list_subnets'))
     return render_template('subnet_form.html', title='Create Subnet',
                            form=form, legend='Create Subnet')
@@ -116,12 +114,11 @@ def subnet_detail(subnet_id):
 
 @subnets_bp.route('/<int:subnet_id>/edit', methods=['GET', 'POST'])
 @login_required
-@role_required('admin', 'manager') 
+@role_required('admin', 'manager')
 def edit_subnet(subnet_id):
     subnet = Subnet.query.get_or_404(subnet_id)
     form = SubnetForm()
     if form.validate_on_submit():
-        # Simpan nilai lama untuk audit
         old_values = {
             'name': subnet.name,
             'network_address': subnet.network_address,
@@ -143,7 +140,6 @@ def edit_subnet(subnet_id):
         subnet.alert_threshold = form.alert_threshold.data
         db.session.commit()
 
-        # Bandingkan perubahan
         new_values = {
             'name': subnet.name,
             'network_address': subnet.network_address,
@@ -162,12 +158,12 @@ def edit_subnet(subnet_id):
             log_change('UPDATE', 'Subnet', subnet.id, changes)
 
         log_activity(f'Edited subnet {subnet.name}')
-        flash('Subnet updated.', 'success')
         send_webhook('subnet_updated', {
             'subnet': subnet.name,
             'network': subnet.network_address,
             'user': current_user.username
         })
+        flash('Subnet updated.', 'success')
         return redirect(url_for('subnets.subnet_detail', subnet_id=subnet.id))
     elif request.method == 'GET':
         form.name.data = subnet.name
@@ -187,7 +183,6 @@ def edit_subnet(subnet_id):
 @role_required('admin', 'manager')
 def delete_subnet(subnet_id):
     subnet = Subnet.query.get_or_404(subnet_id)
-    # Simpan data untuk audit sebelum dihapus
     old_data = {
         'name': subnet.name,
         'network': subnet.network_address,
@@ -201,12 +196,12 @@ def delete_subnet(subnet_id):
     db.session.commit()
     log_activity(f'Deleted subnet {subnet.name}')
     log_change('DELETE', 'Subnet', subnet_id, old_data)
-    flash('Subnet deleted.', 'success')
     send_webhook('subnet_deleted', {
         'subnet': subnet.name,
         'network': subnet.network_address,
         'user': current_user.username
     })
+    flash('Subnet deleted.', 'success')
     return redirect(url_for('subnets.list_subnets'))
 
 
@@ -328,7 +323,7 @@ def import_csv(subnet_id):
         flash(f'{error_count} error(s): {"; ".join(errors[:5])}{"..." if len(errors) > 5 else ""}', 'warning')
 
     log_activity(f'Imported {success_count} IPs into {subnet.name} (errors: {error_count})')
-    check_and_alert(subnet)   # alert setelah import
+    check_and_alert(subnet)
     return redirect(url_for('subnets.subnet_detail', subnet_id=subnet_id))
 
 
@@ -360,6 +355,19 @@ def ip_map_data(subnet_id):
             'online': ip.is_online
         }
 
+    # Ambil semua port mapping
+    port_mappings = PortMapping.query.all()
+    port_dict = {}
+    for pm in port_mappings:
+        if pm.ip_address:
+            port_dict[pm.ip_address.ip_address] = {
+                'switch': pm.switch_name,
+                'port': pm.port_number,
+                'device': pm.device_name or '',
+                'vlan': pm.vlan or '',
+                'status': pm.status
+            }
+
     ip_list = []
     if net.num_addresses > 2:
         start = net.network_address + 1
@@ -367,19 +375,22 @@ def ip_map_data(subnet_id):
         current = start
         while current <= end:
             ip_str = str(current)
+            port_info = port_dict.get(ip_str, None)
             if ip_str in ip_dict:
                 ip_list.append({
                     'ip': ip_str,
                     'status': ip_dict[ip_str]['status'],
                     'hostname': ip_dict[ip_str]['hostname'],
-                    'online': ip_dict[ip_str]['online']
+                    'online': ip_dict[ip_str]['online'],
+                    'port_mapping': port_info
                 })
             else:
                 ip_list.append({
                     'ip': ip_str,
                     'status': 'free',
                     'hostname': '',
-                    'online': False
+                    'online': False,
+                    'port_mapping': port_info
                 })
             current += 1
 

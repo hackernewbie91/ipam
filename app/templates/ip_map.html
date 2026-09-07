@@ -12,10 +12,10 @@
 </nav>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2><i class="fas fa-map"></i> IP Map: {{ subnet.name }}</h2>
+    <h2><i class="ti ti-map-2"></i> IP Map: {{ subnet.name }}</h2>
     <div>
-        <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-outline-secondary mr-2"><i class="fas fa-list-ul"></i> Table View</a>
-        <button id="refreshMap" class="btn btn-outline-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+        <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-outline-secondary mr-2"><i class="ti ti-list"></i> Table View</a>
+        <button id="refreshMap" class="btn btn-outline-primary"><i class="ti ti-refresh"></i> Refresh</button>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title"><i class="fas fa-grid-3x3-gap"></i> IP Grid</h3>
+                <h3 class="card-title"><i class="ti ti-grid-3x3-gap"></i> IP Grid</h3>
                 <small class="text-muted">Network: {{ subnet.network_address }}</small>
             </div>
             <div class="card-body" id="ipGridContainer">
@@ -66,13 +66,32 @@
         </div>
         <div class="card">
             <div class="card-header">
-                <h6 class="card-title"><i class="fas fa-info-circle"></i> Network Info</h6>
+                <h6 class="card-title"><i class="ti ti-info-circle"></i> Network Info</h6>
             </div>
             <div class="card-body" id="networkInfo">
                 <p class="text-muted">Loading...</p>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Modal Detail IP -->
+<div class="modal fade" id="ipDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="ti ti-network"></i> IP Detail</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="ipDetailBody">
+        <!-- Diisi oleh JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="ipDetailAction">View in Subnet</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -99,7 +118,12 @@ function loadIPMap() {
     `;
     
     fetch("{{ url_for('subnets.ip_map_data', subnet_id=0) }}".replace('0', subnetId))
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             renderIPGrid(data, container, networkInfo);
         })
@@ -107,8 +131,8 @@ function loadIPMap() {
             console.error('Error loading IP map:', error);
             container.innerHTML = `
                 <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> 
-                    Failed to load IP map. Please try again.
+                    <i class="ti ti-alert-triangle"></i> 
+                    Failed to load IP map. Please try again. (${error.message})
                 </div>
             `;
         });
@@ -148,21 +172,35 @@ function renderIPGrid(data, container, networkInfo) {
         </div>
     `;
     
+    // Simpan data IP lengkap untuk dipakai di modal
+    window.ipMapData = {};
+    ips.forEach((ip) => {
+        window.ipMapData[ip.ip] = ip;
+    });
+    
     let html = '<div style="display: grid; grid-template-columns: repeat(' + cols + ', 1fr); gap: 4px;">';
     
-    ips.forEach((ip, index) => {
+    ips.forEach((ip) => {
         let bgClass = 'bg-success'; // free
-        let title = `IP: ${ip.ip}\nStatus: Free`;
+        let title = `IP: ${ip.ip}\nStatus: ${ip.status}`;
         let dotHtml = '';
         
         if (ip.status === 'allocated') {
             bgClass = 'bg-primary';
-            title = `IP: ${ip.ip}\nStatus: Allocated`;
             if (ip.hostname) title += `\nHostname: ${ip.hostname}`;
         } else if (ip.status === 'reserved') {
             bgClass = 'bg-secondary';
-            title = `IP: ${ip.ip}\nStatus: Reserved`;
             if (ip.hostname) title += `\nHostname: ${ip.hostname}`;
+        } else {
+            bgClass = 'bg-success';
+        }
+        
+        if (ip.port_mapping) {
+            title += `\nSwitch: ${ip.port_mapping.switch}`;
+            title += `\nPort: ${ip.port_mapping.port}`;
+            if (ip.port_mapping.device) title += `\nDevice: ${ip.port_mapping.device}`;
+            if (ip.port_mapping.vlan) title += `\nVLAN: ${ip.port_mapping.vlan}`;
+            title += `\nPort Status: ${ip.port_mapping.status}`;
         }
         
         if (ip.ip === info.gateway) {
@@ -187,8 +225,8 @@ function renderIPGrid(data, container, networkInfo) {
             <div class="badge ${bgClass} d-flex align-items-center justify-content-center position-relative"
                  style="height: 40px; cursor: pointer; font-size: 10px;"
                  title="${title}"
-                 data-toggle="tooltip" data-placement="top"
-                 onclick="showIPDetail('${ip.ip}', '${ip.status}', '${ip.hostname}', ${ip.online})">
+                 data-bs-toggle="tooltip" data-bs-placement="top"
+                 onclick="showIPDetail('${ip.ip}')">
                 ${ip.ip.split('.').pop()}
                 ${dotHtml}
             </div>
@@ -199,25 +237,43 @@ function renderIPGrid(data, container, networkInfo) {
     
     container.innerHTML = html;
     
+    // Aktifkan tooltip Bootstrap 5
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el);
     });
 }
 
-function showIPDetail(ip, status, hostname, online) {
-    let message = `IP Address: ${ip}\nStatus: ${status}`;
-    if (hostname) message += `\nHostname: ${hostname}`;
-    if (online) message += `\nStatus: Online`;
-    else message += `\nStatus: Offline`;
+function showIPDetail(ip) {
+    const data = window.ipMapData[ip];
+    if (!data) return;
     
-    if (status === 'allocated' || status === 'reserved') {
-        message += `\n\nClick OK to go to subnet detail.`;
-        if (confirm(message)) {
-            window.location.href = "{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}";
-        }
-    } else {
-        alert(message);
+    let bodyHtml = '';
+    bodyHtml += `<div class="mb-2"><strong>IP Address:</strong> ${data.ip}</div>`;
+    bodyHtml += `<div class="mb-2"><strong>Status:</strong> <span class="badge ${data.status === 'allocated' ? 'bg-primary' : data.status === 'reserved' ? 'bg-warning' : 'bg-success'}">${data.status}</span></div>`;
+    if (data.hostname) {
+        bodyHtml += `<div class="mb-2"><strong>Hostname:</strong> ${data.hostname}</div>`;
     }
+    bodyHtml += `<div class="mb-2"><strong>Online:</strong> ${data.online ? '<span class="badge bg-success">Online</span>' : '<span class="badge bg-secondary">Offline</span>'}</div>`;
+    
+    if (data.port_mapping) {
+        bodyHtml += '<hr>';
+        bodyHtml += '<h6 class="mb-2"><i class="ti ti-plug"></i> Port Mapping</h6>';
+        bodyHtml += `<div class="mb-2"><strong>Switch:</strong> ${data.port_mapping.switch}</div>`;
+        bodyHtml += `<div class="mb-2"><strong>Port:</strong> ${data.port_mapping.port}</div>`;
+        if (data.port_mapping.device) bodyHtml += `<div class="mb-2"><strong>Device:</strong> ${data.port_mapping.device}</div>`;
+        if (data.port_mapping.vlan) bodyHtml += `<div class="mb-2"><strong>VLAN:</strong> ${data.port_mapping.vlan}</div>`;
+        bodyHtml += `<div class="mb-2"><strong>Port Status:</strong> <span class="badge ${data.port_mapping.status === 'active' ? 'bg-success' : data.port_mapping.status === 'reserved' ? 'bg-warning' : 'bg-secondary'}">${data.port_mapping.status}</span></div>`;
+    }
+    
+    document.getElementById('ipDetailBody').innerHTML = bodyHtml;
+    
+    const actionBtn = document.getElementById('ipDetailAction');
+    actionBtn.onclick = function() {
+        window.location.href = "{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}";
+    };
+    
+    const modal = new bootstrap.Modal(document.getElementById('ipDetailModal'));
+    modal.show();
 }
 </script>
 {% endblock %}
