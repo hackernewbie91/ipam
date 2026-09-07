@@ -15,6 +15,7 @@ import time
 from datetime import datetime, timedelta
 from app.utils import calculate_subnet_details, log_change, get_setting, set_setting
 from werkzeug.utils import secure_filename
+from app.models import Subnet, IPAddress, LoginHistory
 
 main_bp = Blueprint('main', __name__)
 
@@ -338,6 +339,19 @@ def delete_webhook(webhook_id):
     db.session.commit()
     flash('Webhook deleted.', 'success')
     return redirect(url_for('main.webhooks'))
+
+@main_bp.route('/login-history')
+@login_required
+def login_history():
+    if not current_user.is_admin:
+        flash('Only admin can view login history.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    page = request.args.get('page', 1, type=int)
+    history = LoginHistory.query.order_by(LoginHistory.login_time.desc()).paginate(
+        page=page, per_page=20, error_out=False)
+    
+    return render_template('login_history.html', history=history)
 
 
 UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')

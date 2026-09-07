@@ -41,6 +41,7 @@ class IPAddressForm(FlaskForm):
     device_type = StringField('Device Type', validators=[Optional(), Length(max=50)])
     assigned_to = StringField('Assigned To', validators=[Optional(), Length(max=100)])
     description = TextAreaField('Description')
+    tags = StringField('Tags (comma separated)', validators=[Optional(), Length(max=255)])
     submit = SubmitField('Save')
 
     def validate_ip_address(self, field):

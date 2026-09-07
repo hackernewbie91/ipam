@@ -45,7 +45,8 @@ def add_ip(subnet_id):
             mac_address=form.mac_address.data,
             device_type=form.device_type.data,
             assigned_to=form.assigned_to.data,
-            description=form.description.data
+            description=form.description.data,
+            tags=form.tags.data or ''  # Tambahkan ini
         )
         db.session.add(new_ip)
         db.session.commit()
@@ -125,6 +126,7 @@ def edit_ip(ip_id):
         ip_entry.device_type = form.device_type.data
         ip_entry.assigned_to = form.assigned_to.data
         ip_entry.description = form.description.data
+        ip_entry.tags = form.tags.data or ''  # Tambahkan ini
         db.session.commit()
 
         # Bandingkan perubahan
@@ -166,6 +168,7 @@ def edit_ip(ip_id):
         form.device_type.data = ip_entry.device_type
         form.assigned_to.data = ip_entry.assigned_to
         form.description.data = ip_entry.description
+        form.tags.data = ip_entry.tags
     return render_template('ip_form.html', form=form, subnet=subnet,
                            ip_entry=ip_entry, legend='Edit IP Address')
 

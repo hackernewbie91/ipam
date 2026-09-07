@@ -68,6 +68,7 @@ class IPAddress(db.Model):
     device_type = db.Column(db.String(50))
     assigned_to = db.Column(db.String(100))
     description = db.Column(db.Text)
+    tags = db.Column(db.String(255), default='')  # Tambahkan ini
     last_seen = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -136,3 +137,19 @@ class PortMapping(db.Model):
 
     def __repr__(self):
         return f'<PortMapping {self.switch_name}:{self.port_number}>'
+
+
+class LoginHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ip_address = db.Column(db.String(45))
+    user_agent = db.Column(db.String(255))
+    login_time = db.Column(db.DateTime, default=datetime.utcnow)
+    logout_time = db.Column(db.DateTime, nullable=True)
+    session_id = db.Column(db.String(100), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
+    user = db.relationship('User', backref=db.backref('login_history', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<LoginHistory {self.user.username} - {self.login_time}>'

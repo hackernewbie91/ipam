@@ -67,6 +67,12 @@
                         <label>{{ form.description.label }}</label>
                         {{ form.description(class="form-control", rows="3") }}
                     </div>
+                    <!-- Field Tags -->
+                    <div class="form-group">
+                        <label class="form-label">{{ form.tags.label }}</label>
+                        {{ form.tags(class="form-control", placeholder="production, project-alpha") }}
+                        <div class="form-text text-muted">Pisahkan dengan koma, contoh: production, project-alpha</div>
+                    </div>
                     <div class="text-right">
                         <a href="{{ url_for('subnets.subnet_detail', subnet_id=subnet.id) }}" class="btn btn-secondary">Cancel</a>
                         {{ form.submit(class="btn btn-primary") }}

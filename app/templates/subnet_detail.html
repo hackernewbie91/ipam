@@ -117,6 +117,7 @@
                     <th>MAC</th>
                     <th>Device</th>
                     <th>Assigned To</th>
+                    <th>Tags</th>
                     <th>Online</th>
                     <th>Actions</th>
                 </tr>
@@ -138,6 +139,15 @@
                     <td>{{ ip.mac_address or '-' }}</td>
                     <td>{{ ip.device_type or '-' }}</td>
                     <td>{{ ip.assigned_to or '-' }}</td>
+                    <td>
+                        {% if ip.tags %}
+                            {% for tag in ip.tags.split(',') %}
+                            <span class="badge bg-info mr-1">{{ tag.strip() }}</span>
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td>
                         {% if ip.is_online %}
                         <span class="badge bg-success"><i class="ti ti-circle-check"></i> Online</span>

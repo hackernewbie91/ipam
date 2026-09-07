@@ -1,12 +1,17 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Message
-from app import mail
+from app import mail, db
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from flask import current_app
 from app.forms import ForgotPasswordForm, ResetPasswordForm
 from app.models import User
 from app.forms import LoginForm
+from app.models import User, LoginHistory
+from flask_login import user_logged_in, user_logged_out
+from flask import session
+import uuid
+from datetime import datetime
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -21,6 +26,17 @@ def login():
             flash('Invalid username or password', 'danger')
             return redirect(url_for('auth.login'))
         login_user(user, remember=form.remember_me.data)
+        # Catat login history
+        login_record = LoginHistory(
+            user_id=user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.user_agent.string,
+            session_id=str(uuid.uuid4()),
+            is_active=True
+        )
+        db.session.add(login_record)
+        db.session.commit()
+        session['login_history_id'] = login_record.id
         next_page = request.args.get('next')
         flash('Logged in successfully.', 'success')
         return redirect(next_page or url_for('main.dashboard'))
@@ -92,5 +108,13 @@ def reset_password(token):
 
 @auth_bp.route('/logout')
 def logout():
+    # Catat logout
+    login_history_id = session.get('login_history_id')
+    if login_history_id:
+        login_record = LoginHistory.query.get(login_history_id)
+        if login_record:
+            login_record.logout_time = datetime.utcnow()
+            login_record.is_active = False
+            db.session.commit()
     logout_user()
     return redirect(url_for('auth.login'))
