@@ -41,6 +41,7 @@ def create_port_mapping():
 
         mapping = PortMapping(
             switch_name=form.switch_name.data,
+            total_ports=form.total_ports.data if form.total_ports.data else 24,  # TAMBAHKAN INI
             port_number=form.port_number.data,
             ip_address_id=ip_obj.id if ip_obj else None,
             device_name=form.device_name.data,
@@ -101,6 +102,7 @@ def edit_port_mapping(mapping_id):
             'status': mapping.status
         }
         mapping.switch_name = form.switch_name.data
+        mapping.total_ports = form.total_ports.data if form.total_ports.data else 24  # TAMBAHKAN INI
         mapping.port_number = form.port_number.data
         mapping.ip_address_id = ip_obj.id if ip_obj else None
         mapping.device_name = form.device_name.data
@@ -147,23 +149,27 @@ def delete_port_mapping(mapping_id):
     return redirect(url_for('port_mapping.list_port_mappings'))
 
 @port_mapping_bp.route('/visual')
+@port_mapping_bp.route('/visual/<switch_name>')
 @login_required
-def port_visual():
+def port_visual(switch_name=None):
     """Halaman visualisasi switch dan port."""
     switches = db.session.query(PortMapping.switch_name).distinct().all()
     switch_names = [s[0] for s in switches]
     
-    # Ambil semua port mapping
     all_mappings = PortMapping.query.all()
     
-    # Kelompokkan per switch
+    # Jika switch_name diberikan, filter hanya switch itu
+    if switch_name:
+        switch_names = [switch_name]
+    
     switch_data = {}
     for switch in switch_names:
         mappings = [m for m in all_mappings if m.switch_name == switch]
-        # Asumsikan maksimal 48 port
-        max_port = max([m.port_number for m in mappings], default=24)
+        total_ports = 24
+        if mappings and mappings[0].total_ports:
+            total_ports = mappings[0].total_ports
         port_list = []
-        for port_num in range(1, max_port + 1):
+        for port_num in range(1, total_ports + 1):
             mapping = next((m for m in mappings if m.port_number == port_num), None)
             port_list.append({
                 'port': port_num,

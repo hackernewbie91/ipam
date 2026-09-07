@@ -60,6 +60,7 @@ class ResetPasswordForm(FlaskForm):
     
 class PortMappingForm(FlaskForm):
     switch_name = StringField('Switch Name', validators=[DataRequired(), Length(max=100)])
+    total_ports = IntegerField('Total Ports', validators=[Optional()], default=24)
     port_number = IntegerField('Port Number', validators=[DataRequired()])
     ip_address = StringField('IP Address', validators=[Optional(), Length(max=15)])
     device_name = StringField('Device Name', validators=[Optional(), Length(max=100)])

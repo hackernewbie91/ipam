@@ -124,6 +124,7 @@ class PortMapping(db.Model):
     vlan = db.Column(db.Integer)
     status = db.Column(db.String(20), default='active')  # active, reserved, free
     description = db.Column(db.Text)
+    total_ports = db.Column(db.Integer, default=24)  # Tambahkan ini
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

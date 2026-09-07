@@ -32,7 +32,11 @@
             <tbody>
                 {% for mapping in mappings.items %}
                 <tr>
-                    <td>{{ mapping.switch_name }}</td>
+                    <td>
+                        <a href="{{ url_for('port_mapping.port_visual', switch_name=mapping.switch_name) }}" class="fw-bold text-decoration-none">
+                            <i class="ti ti-plug"></i> {{ mapping.switch_name }}
+                        </a>
+                    </td>
                     <td>{{ mapping.port_number }}</td>
                     <td>
                         {% if mapping.ip_address %}

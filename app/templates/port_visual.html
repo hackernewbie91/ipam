@@ -4,9 +4,16 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2><i class="ti ti-plug"></i> Switch Port Visual</h2>
-    <a href="{{ url_for('port_mapping.list_port_mappings') }}" class="btn btn-outline-secondary">
-        <i class="ti ti-list"></i> Table View
-    </a>
+    <div>
+        {% if request.view_args.get('switch_name') %}
+        <a href="{{ url_for('port_mapping.port_visual') }}" class="btn btn-outline-secondary mr-2">
+            <i class="ti ti-arrow-left"></i> All Switches
+        </a>
+        {% endif %}
+        <a href="{{ url_for('port_mapping.list_port_mappings') }}" class="btn btn-outline-secondary">
+            <i class="ti ti-list"></i> Table View
+        </a>
+    </div>
 </div>
 
 <div class="card mb-3">
@@ -45,7 +52,7 @@
                 <h5 style="color: #fff; margin-top: 8px;">{{ switch_name }}</h5>
             </div>
             <!-- Ports grid -->
-            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px;">
+            <div style="display: grid; grid-template-columns: repeat({{ ports|length if ports|length <= 24 else 24 }}, 1fr); gap: 8px;">
                 {% for port in ports %}
                 {% set mapping = port.mapping %}
                 <div style="position: relative;">
