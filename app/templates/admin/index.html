@@ -4,22 +4,22 @@
     <h3>Administration Panel</h3>
     <p>Welcome to the IPAM administration area. Manage users and view activity logs.</p>
 
-    <div class="row mt-4">
+    <div class="row mt-4 d-flex align-items-stretch">
         {% for item in admin_view.admin.menu() %}
             {% if item.is_accessible() and item.name != 'Home' %}
-            <div class="col-md-4">
-                <div class="card border-primary">
-                    <div class="card-body text-center">
+            <div class="col-md-4 d-flex">
+                <div class="card border-primary w-100">
+                    <div class="card-body text-center d-flex flex-column">
                         <i class="fas fa-{% if item.name == 'Users' %}users{% else %}list-check{% endif %} fa-3x text-primary mb-3"></i>
                         <h5 class="card-title">{{ item.name }}</h5>
-                        <p class="card-text text-muted small">
+                        <p class="card-text text-muted small flex-grow-1">
                             {% if item.name == 'Users' %}
                                 Manage system users and their permissions.
                             {% else %}
                                 View all recorded activity logs.
                             {% endif %}
                         </p>
-                        <a href="{{ item.get_url() }}" class="btn btn-primary btn-sm mt-2">Go to {{ item.name }}</a>
+                        <a href="{{ item.get_url() }}" class="btn btn-primary btn-sm mt-auto">Go to {{ item.name }}</a>
                     </div>
                 </div>
             </div>

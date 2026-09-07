@@ -127,33 +127,37 @@ def create_app(config_class=None):
         can_edit = False
         can_delete = False
         column_list = ('timestamp', 'user', 'action', 'object_type', 'object_id', 'changes')
+        column_searchable_list = ('action', 'object_type', 'user.username', 'details', 'changes')
+        column_filters = ('action', 'object_type', 'timestamp')
         column_default_sort = ('timestamp', True)
 
         list_template = 'admin/model/list.html'
 
         def _format_timestamp(view, context, model, name):
             if model.timestamp:
-                from pytz import timezone, utc
-                # Ganti 'Asia/Jakarta' dengan timezone server Anda
-                local_tz = timezone('Asia/Jakarta')
-                local_time = model.timestamp.replace(tzinfo=utc).astimezone(local_tz)
+                from datetime import timedelta
+                local_time = model.timestamp + timedelta(hours=7)
                 return local_time.strftime('%d-%m-%Y %H:%M:%S')
             return ''
 
         def _format_changes(view, context, model, name):
             if not model.changes:
                 return Markup('-')
-            
-            data = model.changes
+
+            try:
+                data = json.loads(model.changes)
+            except (TypeError, json.JSONDecodeError):
+                data = model.changes
+
             if isinstance(data, str):
                 try:
                     data = json.loads(data)
                 except:
                     pass
-            
+
             if not isinstance(data, dict):
                 return Markup(str(data))
-            
+
             lines = []
             for key, value in data.items():
                 key_display = key.replace('_', ' ').title()
@@ -168,10 +172,10 @@ def create_app(config_class=None):
                     )
                 else:
                     lines.append(f'<b>{key_display}:</b> {value}')
-            
+
             if not lines:
                 return Markup('-')
-            
+
             html = f'<div style="max-width:300px; white-space:normal; word-wrap:break-word;">{ " <br> ".join(lines) }</div>'
             return Markup(html)
 

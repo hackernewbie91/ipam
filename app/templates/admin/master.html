@@ -12,7 +12,7 @@
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.index') }}">
-                            <i class="fas fa-home"></i> Admin Home
+                            <i class="ti ti-home"></i> Admin Home
                         </a>
                     </li>
                     {% for item in admin_view.admin.menu() if item.is_accessible() %}

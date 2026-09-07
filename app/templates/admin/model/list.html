@@ -12,6 +12,18 @@
         {% endif %}
     </div>
     <div class="card-body p-0">
+        <!-- Form Pencarian -->
+        <form method="GET" action="{{ url_for('.index_view') }}" class="mb-3 d-flex gap-2">
+            <div class="input-group">
+                <span class="input-group-text"><i class="ti ti-search"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="Search action, object type, user, changes..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+            {% if request.args.get('search') %}
+            <a href="{{ url_for('.index_view') }}" class="btn btn-secondary">Reset</a>
+            {% endif %}
+        </form>
+
         <div class="table-responsive">
             <table class="table table-vcenter card-table">
                 <thead>

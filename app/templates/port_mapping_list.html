@@ -5,11 +5,16 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title"><i class="ti ti-plug"></i> Port Mapping</h3>
-        {% if current_user.role in ['admin', 'manager', 'operator'] %}
-        <a href="{{ url_for('port_mapping.create_port_mapping') }}" class="btn btn-primary btn-sm">
-            <i class="ti ti-plus"></i> Add Port Mapping
-        </a>
-        {% endif %}
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('port_mapping.port_visual') }}" class="btn btn-outline-info btn-sm">
+                <i class="ti ti-chart-bubble"></i> Visual View
+            </a>
+            {% if current_user.role in ['admin', 'manager', 'operator'] %}
+            <a href="{{ url_for('port_mapping.create_port_mapping') }}" class="btn btn-primary btn-sm">
+                <i class="ti ti-plus"></i> Add Port Mapping
+            </a>
+            {% endif %}
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-vcenter card-table">
@@ -96,4 +101,5 @@
         {% endif %}
     </ul>
 </nav>
+
 {% endblock %}

@@ -145,3 +145,30 @@ def delete_port_mapping(mapping_id):
     log_change('DELETE', 'PortMapping', mapping_id, old_data)
     flash('Port mapping deleted.', 'success')
     return redirect(url_for('port_mapping.list_port_mappings'))
+
+@port_mapping_bp.route('/visual')
+@login_required
+def port_visual():
+    """Halaman visualisasi switch dan port."""
+    switches = db.session.query(PortMapping.switch_name).distinct().all()
+    switch_names = [s[0] for s in switches]
+    
+    # Ambil semua port mapping
+    all_mappings = PortMapping.query.all()
+    
+    # Kelompokkan per switch
+    switch_data = {}
+    for switch in switch_names:
+        mappings = [m for m in all_mappings if m.switch_name == switch]
+        # Asumsikan maksimal 48 port
+        max_port = max([m.port_number for m in mappings], default=24)
+        port_list = []
+        for port_num in range(1, max_port + 1):
+            mapping = next((m for m in mappings if m.port_number == port_num), None)
+            port_list.append({
+                'port': port_num,
+                'mapping': mapping
+            })
+        switch_data[switch] = port_list
+    
+    return render_template('port_visual.html', switch_data=switch_data)

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block page_title %}Switch Visual{% endblock %}
+{% block breadcrumb %}Switch Visual{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2><i class="ti ti-plug"></i> Switch Port Visual</h2>
+    <a href="{{ url_for('port_mapping.list_port_mappings') }}" class="btn btn-outline-secondary">
+        <i class="ti ti-list"></i> Table View
+    </a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-palette"></i> Legend</h3>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-4">
+            <div class="d-flex align-items-center">
+                <span class="badge" style="width: 20px; height: 20px; background-color: #d63939; border-radius: 4px; margin-right: 8px;"></span>
+                <span>Active (Terpakai)</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="badge" style="width: 20px; height: 20px; background-color: #f59f00; border-radius: 4px; margin-right: 8px;"></span>
+                <span>Reserved</span>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="badge" style="width: 20px; height: 20px; background-color: #2fb344; border-radius: 4px; margin-right: 8px;"></span>
+                <span>Free (Kosong)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for switch_name, ports in switch_data.items() %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title"><i class="ti ti-server"></i> {{ switch_name }}</h3>
+        <span class="badge bg-primary">{{ ports|length }} Ports</span>
+    </div>
+    <div class="card-body">
+        <!-- Visual switch body -->
+        <div style="background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+            <div class="text-center mb-3">
+                <i class="ti ti-server" style="font-size: 48px; color: #3c8dbc;"></i>
+                <h5 style="color: #fff; margin-top: 8px;">{{ switch_name }}</h5>
+            </div>
+            <!-- Ports grid -->
+            <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px;">
+                {% for port in ports %}
+                {% set mapping = port.mapping %}
+                <div style="position: relative;">
+                    <div style="
+                        height: 45px;
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 12px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        {% if mapping %}
+                            {% if mapping.status == 'active' %}
+                            background-color: #d63939; color: #fff;
+                            {% elif mapping.status == 'reserved' %}
+                            background-color: #f59f00; color: #fff;
+                            {% else %}
+                            background-color: #2fb344; color: #fff;
+                            {% endif %}
+                        {% else %}
+                        background-color: #2fb344; color: #fff;
+                        {% endif %}
+                    " 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top"
+                    title="{% if mapping %}Port {{ port.port }} - {{ mapping.ip_address.ip_address if mapping.ip_address else 'No IP' }} - {{ mapping.device_name or 'No Device' }}{% else %}Port {{ port.port }} - Free{% endif %}">
+                        {{ port.port }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Detail table -->
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Port</th>
+                        <th>IP Address</th>
+                        <th>Device</th>
+                        <th>VLAN</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for port in ports %}
+                    {% set mapping = port.mapping %}
+                    <tr>
+                        <td>{{ port.port }}</td>
+                        <td>{{ mapping.ip_address.ip_address if mapping and mapping.ip_address else '-' }}</td>
+                        <td>{{ mapping.device_name if mapping else '-' }}</td>
+                        <td>{{ mapping.vlan if mapping else '-' }}</td>
+                        <td>
+                            {% if mapping %}
+                                {% if mapping.status == 'active' %}
+                                <span class="badge bg-danger">Active</span>
+                                {% elif mapping.status == 'reserved' %}
+                                <span class="badge bg-warning">Reserved</span>
+                                {% else %}
+                                <span class="badge bg-success">Free</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="badge bg-success">Free</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Aktifkan tooltip
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el);
+    });
+});
+</script>
+{% endblock %}
